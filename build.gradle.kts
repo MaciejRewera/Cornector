@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.plugin.statistics.ReportStatisticsToElasticSearch.url
-
 val ktor_version: String by project
 val kotlin_version: String by project
 val logback_version: String by project
@@ -27,7 +25,6 @@ repositories {
 
     maven { url = uri("https://software.r3.com/artifactory/corda") }
     maven { url = uri("https://software.r3.com/artifactory/corda-dependencies") }
-    maven { url = uri("https://software.r3.com/artifactory/corda-dev") }
 }
 
 dependencies {
@@ -39,5 +36,5 @@ dependencies {
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
 
-    implementation("net.corda:corda-core:$corda_release_version")
+    implementation("net.corda:corda-rpc:$corda_release_version")
 }
