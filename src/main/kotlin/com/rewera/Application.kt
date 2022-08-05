@@ -1,7 +1,7 @@
 package com.rewera
 
 import com.google.inject.Guice
-import com.rewera.connectors.CordaNodeConnector
+import com.rewera.controllers.ControllersRegistry
 import com.rewera.modules.ConnectorsModule
 import com.rewera.modules.MainModule
 import com.rewera.plugins.configureRouting
@@ -14,8 +14,8 @@ fun main(args: Array<String>): Unit = EngineMain.main(args)
 @Suppress("unused") // application.conf references the main function. This annotation prevents the IDE from marking it as unused.
 fun Application.module() {
     val injector = Guice.createInjector(MainModule(this), ConnectorsModule())
-    val cordaNodeConnector: CordaNodeConnector = injector.getInstance(CordaNodeConnector::class.java)
+    val controllersRegistry: ControllersRegistry = injector.getInstance(ControllersRegistry::class.java)
 
     configureSerialization()
-    configureRouting(cordaNodeConnector)
+    configureRouting(controllersRegistry)
 }
