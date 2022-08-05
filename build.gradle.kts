@@ -39,12 +39,15 @@ dependencies {
     implementation("net.corda:corda-rpc:$corda_release_version")
 
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktor_version")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:$kotlin_version")
+
+    testImplementation("io.kotest:kotest-runner-junit5:5.4.1")
+    runtimeOnly("io.kotest:kotest-assertions-core:5.4.1")
+
     testImplementation("org.junit.jupiter:junit-jupiter-engine:5.8.2")
     testImplementation("org.mockito.kotlin:mockito-kotlin:4.0.0")
 
 }
 
-tasks.test {
+tasks.withType<Test>().configureEach {
     useJUnitPlatform()
 }

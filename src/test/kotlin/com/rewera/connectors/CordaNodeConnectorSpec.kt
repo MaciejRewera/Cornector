@@ -1,35 +1,29 @@
 package com.rewera.connectors
 
+import io.kotest.core.spec.Spec
+import io.kotest.core.spec.style.WordSpec
+import io.kotest.matchers.shouldBe
 import net.corda.core.messaging.CordaRPCOps
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import org.mockito.Mockito.`when`
 import org.mockito.kotlin.verify
-import kotlin.test.assertEquals
 
 
-class CordaNodeConnectorSpec {
+class CordaNodeConnectorSpec : WordSpec ({
 
-    private val cornectorRpcOps = Mockito.mock(CornectorRpcOps::class.java)
-    private val rpcOps = Mockito.mock(CordaRPCOps::class.java)
+    val cornectorRpcOps = Mockito.mock(CornectorRpcOps::class.java)
+    val rpcOps = Mockito.mock(CordaRPCOps::class.java)
 
-    private val cordaNodeConnector = CordaNodeConnector(cornectorRpcOps)
+    val cordaNodeConnector = CordaNodeConnector(cornectorRpcOps)
 
-    @BeforeEach
-    fun setup() {
+    beforeTest {
         Mockito.reset(cornectorRpcOps, rpcOps)
         `when`(cornectorRpcOps.rpcOps).thenReturn(rpcOps)
     }
 
-    @Nested
-    @DisplayName("CordaNodeConnector on getRegisteredFlows")
-    inner class VaultQuerySpec {
+    "CordaNodeConnector on getRegisteredFlows" should {
 
-        @Test
-        fun `should call CordaRPCOps`() {
+        "call CordaRPCOps" {
             `when`(rpcOps.registeredFlows()).thenReturn(emptyList())
 
             cordaNodeConnector.getRegisteredFlows()
@@ -37,20 +31,18 @@ class CordaNodeConnectorSpec {
             verify(rpcOps).registeredFlows()
         }
 
-        @Test
-        fun `should return empty list when CordaRPCOps returns empty list`() {
+        "return empty list when CordaRPCOps returns empty list" {
             `when`(rpcOps.registeredFlows()).thenReturn(emptyList())
 
-            assertEquals(emptyList(), cordaNodeConnector.getRegisteredFlows())
+            cordaNodeConnector.getRegisteredFlows() shouldBe emptyList()
         }
 
-        @Test
-        fun `should return the value from CordaRPCOps when it returns non-empty list`() {
+        "return the value from CordaRPCOps when it returns non-empty list" {
             val flows = listOf("test.flow.name")
             `when`(rpcOps.registeredFlows()).thenReturn(flows)
 
-            assertEquals(flows, cordaNodeConnector.getRegisteredFlows())
+            cordaNodeConnector.getRegisteredFlows() shouldBe flows
         }
     }
 
-}
+})

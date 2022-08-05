@@ -1,18 +1,22 @@
 package com.rewera
 
+import io.kotest.core.spec.style.WordSpec
+import io.kotest.matchers.shouldBe
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
-import org.junit.jupiter.api.Test
-import kotlin.test.assertEquals
 
-class ApplicationTest {
-    @Test
-    fun testRoot() = testApplication {
-        val response = client.get("/")
+class ApplicationTest : WordSpec({
 
-        assertEquals(HttpStatusCode.OK, response.status)
-        assertEquals("Hello World!", response.bodyAsText())
+    "testRoot" should {
+        "pass for root endpoint" {
+            testApplication {
+                val response = client.get("/")
+
+                HttpStatusCode.OK shouldBe response.status
+                response.bodyAsText() shouldBe "Hello World!"
+            }
+        }
     }
-}
+})
