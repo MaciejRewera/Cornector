@@ -1,14 +1,11 @@
 package com.rewera.plugins
 
 import com.rewera.connectors.CordaNodeConnector
-import com.rewera.connectors.CornectorRpcOps
-import io.ktor.server.routing.*
-import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
-import io.ktor.server.request.*
+import io.ktor.server.routing.*
 
-fun Application.configureRouting() {
+fun Application.configureRouting(cordaNodeConnector: CordaNodeConnector) {
 
     routing {
         get("/") {
@@ -16,7 +13,7 @@ fun Application.configureRouting() {
         }
 
         flowManagerRoutes()
-        flowStarterRoutes()
+        flowStarterRoutes(cordaNodeConnector)
         vaultQueryRoutes()
     }
 }
@@ -32,10 +29,12 @@ fun Route.flowManagerRoutes() {
     }
 }
 
-fun Route.flowStarterRoutes() {
+fun Route.flowStarterRoutes(cordaNodeConnector: CordaNodeConnector) {
     route("/flowstarter") {
 
-        get("/registeredflows") {}
+        get("/registeredflows") {
+            call.respond(cordaNodeConnector.getRegisteredFlows())
+        }
 
         post("/startflow") {}
 

@@ -26,7 +26,7 @@ class CornectorRpcOps @Inject constructor(
 
         connection
     }
-    private val rpcOps: CordaRPCOps by lazy { rpcConnection.proxy }
+    val rpcOps: CordaRPCOps by lazy { rpcConnection.proxy }
 
     private fun createCordaRpcConnection(): CordaRPCConnection {
         val host = config.property("corda.node.address.rpc.host").getString()
