@@ -8,15 +8,16 @@ import io.ktor.server.routing.*
 
 fun Application.configureRouting(controllersRegistry: ControllersRegistry) {
 
-    // TODO: Add '/api/v1' prefix to all endpoints
     routing {
         get("/") {
             call.respondText("Hello World!")
         }
 
-        flowManagerRoutes()
-        flowStarterRoutes(controllersRegistry.flowStarterController)
-        vaultQueryRoutes()
+        route("/api/v1") {
+            flowManagerRoutes()
+            flowStarterRoutes(controllersRegistry.flowStarterController)
+            vaultQueryRoutes()
+        }
     }
 }
 
