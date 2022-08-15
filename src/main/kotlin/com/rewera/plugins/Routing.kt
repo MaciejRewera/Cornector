@@ -1,19 +1,21 @@
 package com.rewera.plugins
 
-import com.rewera.connectors.CordaNodeConnector
+import com.rewera.controllers.ControllersRegistry
+import com.rewera.controllers.FlowStarterController
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-fun Application.configureRouting(cordaNodeConnector: CordaNodeConnector) {
+fun Application.configureRouting(controllersRegistry: ControllersRegistry) {
 
+    // TODO: Add '/api/v1' prefix to all endpoints
     routing {
         get("/") {
             call.respondText("Hello World!")
         }
 
         flowManagerRoutes()
-        flowStarterRoutes(cordaNodeConnector)
+        flowStarterRoutes(controllersRegistry.flowStarterController)
         vaultQueryRoutes()
     }
 }
@@ -29,11 +31,11 @@ fun Route.flowManagerRoutes() {
     }
 }
 
-fun Route.flowStarterRoutes(cordaNodeConnector: CordaNodeConnector) {
+fun Route.flowStarterRoutes(flowStarterController: FlowStarterController) {
     route("/flowstarter") {
 
         get("/registeredflows") {
-            call.respond(cordaNodeConnector.getRegisteredFlows())
+            call.respond(flowStarterController.getRegisteredFlows())
         }
 
         post("/startflow") {}

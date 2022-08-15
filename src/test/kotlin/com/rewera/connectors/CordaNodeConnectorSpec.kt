@@ -6,6 +6,7 @@ import io.kotest.matchers.shouldBe
 import net.corda.core.messaging.CordaRPCOps
 import org.mockito.Mockito
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.reset
 import org.mockito.kotlin.verify
 
 
@@ -17,7 +18,7 @@ class CordaNodeConnectorSpec : WordSpec ({
     val cordaNodeConnector = CordaNodeConnector(cornectorRpcOps)
 
     beforeTest {
-        Mockito.reset(cornectorRpcOps, rpcOps)
+        reset(cornectorRpcOps, rpcOps)
         `when`(cornectorRpcOps.rpcOps).thenReturn(rpcOps)
     }
 
