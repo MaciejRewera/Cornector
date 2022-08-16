@@ -18,8 +18,7 @@ import org.mockito.kotlin.reset
 
 abstract class MockedCordaRpcConnectionIntegrationTestBase {
 
-    private val engine: TestApplicationEngine = TestEngine.create(createTestEnvironment()) {}
-    private val testInjector: Injector = Guice.createInjector(MainModule(engine.application), ConnectorsMockModule())
+    private val testInjector: Injector = Guice.createInjector(ConnectorsMockModule())
 
     @Inject
     protected lateinit var cordaRpcOpsFactory: CordaRpcOpsFactory
@@ -33,12 +32,6 @@ abstract class MockedCordaRpcConnectionIntegrationTestBase {
     @Suppress("unused")
     fun setupTestServer() {
         testInjector.injectMembers(this)
-    }
-
-    @AfterAll
-    @Suppress("unused")
-    fun stopServer() {
-        engine.stop(0L, 0L)
     }
 
     fun ApplicationTestBuilder.setupTestModules() {
