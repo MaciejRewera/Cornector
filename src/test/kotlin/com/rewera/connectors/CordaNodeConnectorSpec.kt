@@ -1,6 +1,5 @@
 package com.rewera.connectors
 
-import io.kotest.core.spec.Spec
 import io.kotest.core.spec.style.WordSpec
 import io.kotest.matchers.shouldBe
 import net.corda.core.messaging.CordaRPCOps
@@ -12,14 +11,14 @@ import org.mockito.kotlin.verify
 
 class CordaNodeConnectorSpec : WordSpec ({
 
-    val cornectorRpcOps = Mockito.mock(CornectorRpcOps::class.java)
+    val cordaRpcOpsFactory = Mockito.mock(CordaRpcOpsFactory::class.java)
     val rpcOps = Mockito.mock(CordaRPCOps::class.java)
 
-    val cordaNodeConnector = CordaNodeConnector(cornectorRpcOps)
+    val cordaNodeConnector = CordaNodeConnector(cordaRpcOpsFactory)
 
     beforeTest {
-        reset(cornectorRpcOps, rpcOps)
-        `when`(cornectorRpcOps.rpcOps).thenReturn(rpcOps)
+        reset(cordaRpcOpsFactory, rpcOps)
+        `when`(cordaRpcOpsFactory.rpcOps).thenReturn(rpcOps)
     }
 
     "CordaNodeConnector on getRegisteredFlows" should {

@@ -3,7 +3,7 @@ package com.rewera.routing
 import com.google.inject.Guice
 import com.google.inject.Inject
 import com.google.inject.Injector
-import com.rewera.connectors.CornectorRpcOps
+import com.rewera.connectors.CordaRpcOpsFactory
 import com.rewera.instance
 import com.rewera.modules.MainModule
 import com.rewera.plugins.configureRouting
@@ -22,11 +22,11 @@ abstract class MockedCordaRpcConnectionIntegrationTestBase {
     private val testInjector: Injector = Guice.createInjector(MainModule(engine.application), ConnectorsMockModule())
 
     @Inject
-    protected lateinit var cornectorRpcOps: CornectorRpcOps
+    protected lateinit var cordaRpcOpsFactory: CordaRpcOpsFactory
 
     @BeforeEach
     fun resetCornectorRpcOps() {
-        reset(cornectorRpcOps)
+        reset(cordaRpcOpsFactory)
     }
 
     @BeforeAll

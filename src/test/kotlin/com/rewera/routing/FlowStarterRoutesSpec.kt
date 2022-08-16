@@ -27,7 +27,7 @@ class FlowStarterRoutesSpec : MockedCordaRpcConnectionIntegrationTestBase() {
     fun `registeredflows endpoint should return the value from CordaRPCOps`() = testApplication {
         setupTestModules()
 
-        whenever(cornectorRpcOps.rpcOps).thenReturn(rpcOps)
+        whenever(cordaRpcOpsFactory.rpcOps).thenReturn(rpcOps)
         whenever(rpcOps.registeredFlows()).thenReturn(listOf("com.test.FlowName.1", "com.test.FlowName.2"))
 
         val response = client.get("/api/v1/flowstarter/registeredflows")
