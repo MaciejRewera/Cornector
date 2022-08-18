@@ -1,17 +1,13 @@
 package com.rewera.connectors
 
+import com.rewera.testdata.TestData.FlowResult
+import com.rewera.testdata.TestData.flowHandleWithClientId
 import io.kotest.core.spec.style.WordSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.future.await
-import net.corda.core.concurrent.CordaFuture
-import net.corda.core.flows.StateMachineRunId
-import net.corda.core.internal.concurrent.doneFuture
 import net.corda.core.messaging.CordaRPCOps
-import net.corda.core.messaging.FlowHandleWithClientId
 import org.mockito.Mockito
 import org.mockito.kotlin.*
-import java.util.*
-import java.util.concurrent.TimeUnit
 
 
 class CordaNodeConnectorSpec : WordSpec({
@@ -52,20 +48,13 @@ class CordaNodeConnectorSpec : WordSpec({
 
     "CordaNodeConnector on getFlowOutcomeForClientId" should {
 
-        data class FlowResult(val value1: String, val value2: Int)
-
+        val clientId = "test-client-id"
         val testReturnValue = FlowResult("Test value", 1234567)
 
-        fun flowHandleWithClientId(clientId: String) = object : FlowHandleWithClientId<FlowResult> {
-            override val clientId: String = clientId
-            override val returnValue: CordaFuture<FlowResult> = doneFuture(testReturnValue)
-            override val id: StateMachineRunId = StateMachineRunId(UUID.randomUUID())
-            override fun close() {}
-        }
-
         "call CordaRPCOps" {
-            val clientId = "test-client-id"
-            whenever(rpcOps.reattachFlowWithClientId<FlowResult>(any())).thenReturn(flowHandleWithClientId(clientId))
+            whenever(rpcOps.reattachFlowWithClientId<FlowResult>(any())).thenReturn(
+                flowHandleWithClientId(clientId, testReturnValue)
+            )
 
             cordaNodeConnector.getFlowOutcomeForClientId<FlowResult>(clientId)!!.await()
 
@@ -73,8 +62,9 @@ class CordaNodeConnectorSpec : WordSpec({
         }
 
         "return Future with value returned by CordaRPCOps" {
-            val clientId = "test-client-id"
-            whenever(rpcOps.reattachFlowWithClientId<FlowResult>(any())).thenReturn(flowHandleWithClientId(clientId))
+            whenever(rpcOps.reattachFlowWithClientId<FlowResult>(any())).thenReturn(
+                flowHandleWithClientId(clientId, testReturnValue)
+            )
 
             val result = cordaNodeConnector.getFlowOutcomeForClientId<FlowResult>(clientId)!!.await()
 
