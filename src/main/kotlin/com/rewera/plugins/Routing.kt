@@ -3,6 +3,7 @@ package com.rewera.plugins
 import com.rewera.controllers.ControllersRegistry
 import com.rewera.controllers.FlowStarterController
 import io.ktor.server.application.*
+import io.ktor.server.plugins.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
@@ -41,7 +42,12 @@ fun Route.flowStarterRoutes(flowStarterController: FlowStarterController) {
 
         post("/startflow") {}
 
-        get("/flowoutcomeforclientid/{clientid}") {}
+        get("/flowoutcomeforclientid/{clientid}") {
+            val clientId = call.parameters["clientid"]
+
+            clientId?.let { call.respond(flowStarterController.getFlowOutcomeForClientId(it)) }
+                ?: throw MissingRequestParameterException("clientid")
+        }
 
         get("/flowoutcome/{flowid}") {}
 

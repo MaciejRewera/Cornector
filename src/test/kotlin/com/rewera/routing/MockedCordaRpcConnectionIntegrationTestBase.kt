@@ -5,13 +5,11 @@ import com.google.inject.Inject
 import com.google.inject.Injector
 import com.rewera.connectors.CordaRpcOpsFactory
 import com.rewera.instance
-import com.rewera.modules.MainModule
 import com.rewera.plugins.configureRouting
 import com.rewera.plugins.configureSerialization
 import io.ktor.server.application.*
 import io.ktor.server.config.*
 import io.ktor.server.testing.*
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.mockito.kotlin.reset
@@ -34,7 +32,15 @@ abstract class MockedCordaRpcConnectionIntegrationTestBase {
         testInjector.injectMembers(this)
     }
 
-    fun ApplicationTestBuilder.setupTestModules() {
+    fun testApplicationWithMockedRpcConnection(
+        block: suspend ApplicationTestBuilder.() -> Unit
+    ) = testApplication {
+        setupTestModules()
+        block()
+    }
+
+
+    private fun ApplicationTestBuilder.setupTestModules() {
         environment {
             config = MapApplicationConfig("ktor.application.modules.size" to "0")
             module { testModule() }
