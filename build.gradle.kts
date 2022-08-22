@@ -3,6 +3,7 @@ val kotlin_version: String by project
 val logback_version: String by project
 val corda_gradle_plugins_version: String by project
 val corda_release_version: String by project
+val kmongo_version: String by project
 
 plugins {
     application
@@ -36,6 +37,9 @@ dependencies {
     implementation("io.ktor:ktor-server-netty-jvm:$ktor_version")
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("com.google.inject:guice:5.1.0")
+
+    implementation("org.litote.kmongo:kmongo:$kmongo_version")
+//    implementation("org.litote.kmongo:kmongo-async:$kmongo_version")
 
     implementation("net.corda:corda-rpc:$corda_release_version")
 
