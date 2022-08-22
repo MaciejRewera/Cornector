@@ -13,7 +13,7 @@ import net.corda.core.messaging.CordaRPCOps
 import net.corda.core.utilities.NetworkHostAndPort
 
 @Singleton
-class CornectorRpcOps @Inject constructor(
+class CordaRpcOpsFactory @Inject constructor(
     private val config: ApplicationConfig,
     applicationLifecycleEvents: Events
 ) {

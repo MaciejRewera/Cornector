@@ -3,20 +3,22 @@ package com.rewera.plugins
 import com.rewera.controllers.ControllersRegistry
 import com.rewera.controllers.FlowStarterController
 import io.ktor.server.application.*
+import io.ktor.server.plugins.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
 fun Application.configureRouting(controllersRegistry: ControllersRegistry) {
 
-    // TODO: Add '/api/v1' prefix to all endpoints
     routing {
         get("/") {
             call.respondText("Hello World!")
         }
 
-        flowManagerRoutes()
-        flowStarterRoutes(controllersRegistry.flowStarterController)
-        vaultQueryRoutes()
+        route("/api/v1") {
+            flowManagerRoutes()
+            flowStarterRoutes(controllersRegistry.flowStarterController)
+            vaultQueryRoutes()
+        }
     }
 }
 
@@ -40,7 +42,12 @@ fun Route.flowStarterRoutes(flowStarterController: FlowStarterController) {
 
         post("/startflow") {}
 
-        get("/flowoutcomeforclientid/{clientid}") {}
+        get("/flowoutcomeforclientid/{clientid}") {
+            val clientId = call.parameters["clientid"]
+
+            clientId?.let { call.respond(flowStarterController.getFlowOutcomeForClientId(it)) }
+                ?: throw MissingRequestParameterException("clientid")
+        }
 
         get("/flowoutcome/{flowid}") {}
 

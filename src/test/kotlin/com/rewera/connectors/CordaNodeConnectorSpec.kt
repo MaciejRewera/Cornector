@@ -1,31 +1,31 @@
 package com.rewera.connectors
 
-import io.kotest.core.spec.Spec
+import com.rewera.testdata.TestData.FlowResult
+import com.rewera.testdata.TestData.flowHandleWithClientId
 import io.kotest.core.spec.style.WordSpec
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.future.await
 import net.corda.core.messaging.CordaRPCOps
 import org.mockito.Mockito
-import org.mockito.Mockito.`when`
-import org.mockito.Mockito.reset
-import org.mockito.kotlin.verify
+import org.mockito.kotlin.*
 
 
-class CordaNodeConnectorSpec : WordSpec ({
+class CordaNodeConnectorSpec : WordSpec({
 
-    val cornectorRpcOps = Mockito.mock(CornectorRpcOps::class.java)
+    val cordaRpcOpsFactory = Mockito.mock(CordaRpcOpsFactory::class.java)
     val rpcOps = Mockito.mock(CordaRPCOps::class.java)
 
-    val cordaNodeConnector = CordaNodeConnector(cornectorRpcOps)
+    val cordaNodeConnector = CordaNodeConnector(cordaRpcOpsFactory)
 
     beforeTest {
-        reset(cornectorRpcOps, rpcOps)
-        `when`(cornectorRpcOps.rpcOps).thenReturn(rpcOps)
+        reset(cordaRpcOpsFactory, rpcOps)
+        whenever(cordaRpcOpsFactory.rpcOps).thenReturn(rpcOps)
     }
 
     "CordaNodeConnector on getRegisteredFlows" should {
 
         "call CordaRPCOps" {
-            `when`(rpcOps.registeredFlows()).thenReturn(emptyList())
+            whenever(rpcOps.registeredFlows()).thenReturn(emptyList())
 
             cordaNodeConnector.getRegisteredFlows()
 
@@ -33,17 +33,44 @@ class CordaNodeConnectorSpec : WordSpec ({
         }
 
         "return empty list when CordaRPCOps returns empty list" {
-            `when`(rpcOps.registeredFlows()).thenReturn(emptyList())
+            whenever(rpcOps.registeredFlows()).thenReturn(emptyList())
 
             cordaNodeConnector.getRegisteredFlows() shouldBe emptyList()
         }
 
         "return the value from CordaRPCOps when it returns non-empty list" {
             val flows = listOf("test.flow.name")
-            `when`(rpcOps.registeredFlows()).thenReturn(flows)
+            whenever(rpcOps.registeredFlows()).thenReturn(flows)
 
             cordaNodeConnector.getRegisteredFlows() shouldBe flows
         }
+    }
+
+    "CordaNodeConnector on getFlowOutcomeForClientId" should {
+
+        val clientId = "test-client-id"
+        val testReturnValue = FlowResult("Test value", 1234567)
+
+        "call CordaRPCOps" {
+            whenever(rpcOps.reattachFlowWithClientId<FlowResult>(any())).thenReturn(
+                flowHandleWithClientId(clientId, testReturnValue)
+            )
+
+            cordaNodeConnector.getFlowOutcomeForClientId<FlowResult>(clientId)!!.await()
+
+            verify(rpcOps).reattachFlowWithClientId<FlowResult>(eq(clientId))
+        }
+
+        "return Future with value returned by CordaRPCOps" {
+            whenever(rpcOps.reattachFlowWithClientId<FlowResult>(any())).thenReturn(
+                flowHandleWithClientId(clientId, testReturnValue)
+            )
+
+            val result = cordaNodeConnector.getFlowOutcomeForClientId<FlowResult>(clientId)!!.await()
+
+            result shouldBe testReturnValue
+        }
+
     }
 
 })

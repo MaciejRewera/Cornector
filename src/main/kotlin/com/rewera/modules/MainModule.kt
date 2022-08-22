@@ -11,4 +11,5 @@ class MainModule(private val application: Application) : AbstractModule() {
         bind(ApplicationConfig::class.java).toInstance(application.environment.config)
         bind(Events::class.java).toInstance(application.environment.monitor)
     }
+
 }
