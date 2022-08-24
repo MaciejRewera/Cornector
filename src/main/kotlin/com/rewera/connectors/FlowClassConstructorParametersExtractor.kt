@@ -51,6 +51,6 @@ class FlowClassConstructorParametersExtractor {
 
         return mapOfActualParams[parameter.name!!]
             ?.let { Jackson.mapper.treeToValue(it, parameterClass) }
-            ?: throw NoSuchElementException("Cannot find parameter [${parameter.name!!}]")
+            ?: throw NoSuchElementException("Cannot find parameter [${parameter.name!!}] in parameters Map")
     }
 }

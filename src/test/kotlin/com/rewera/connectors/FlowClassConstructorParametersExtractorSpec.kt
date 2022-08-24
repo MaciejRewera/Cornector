@@ -108,5 +108,64 @@ class FlowClassConstructorParametersExtractorSpec {
 
     @Nested
     @DisplayName("When provided with flow that has multiple parameters in primary constructor")
-    inner class MultipleParametersFlowSpec {}
+    inner class MultipleParametersFlowSpec {
+
+        inner class MultipleParametersFlow(
+            firstParameter: String,
+            secondParameter: Int,
+            thirdParameter: String
+        ) : FlowLogic<String>() {
+            override fun call(): String = "MultipleParametersFlow result should be here."
+        }
+
+        private val flowClass = MultipleParametersFlow::class.java
+        private val flowName =
+            "com.rewera.connectors.FlowClassConstructorParametersExtractorSpec\$MultipleParametersFlowSpec\$MultipleParametersFlow"
+
+        @Test
+        fun `when provided with empty Json should throw an exception with all missing parameters listed`() {
+            val flowParameters = RpcStartFlowRequestParameters("{}")
+
+            val exc = shouldThrow<IllegalArgumentException> { extractor.extractParameters(flowClass, flowParameters) }
+            exc.message shouldBe "Constructor parameters [firstParameter, secondParameter, thirdParameter] for flow [$flowName] were not provided."
+        }
+
+        @Test
+        fun `when provided with Json containing additional key should throw an exception`() {
+            val flowParameters = RpcStartFlowRequestParameters(
+                "{\"firstParameter\":\"Test value 1\", \"extraParameter\":\"Test Value 2\", \"secondParameter\":1234567, \"thirdParameter\":\"Test value 3\"}"
+            )
+
+            val exc = shouldThrow<IllegalArgumentException> { extractor.extractParameters(flowClass, flowParameters) }
+            exc.message shouldBe "Additional parameters [extraParameter] for flow [$flowName] found."
+        }
+
+        @Test
+        fun `when provided with Json containing correct keys and values should return list with these values in order they appear in constructor`() {
+            val flowParameters = RpcStartFlowRequestParameters(
+                "{\"firstParameter\":\"Test value 1\", \"secondParameter\":1234567, \"thirdParameter\":\"Test value 3\"}"
+            )
+
+            val result = extractor.extractParameters(flowClass, flowParameters)
+
+            result.size shouldBe 3
+            result[0] shouldBe "Test value 1"
+            result[1] shouldBe 1234567
+            result[2] shouldBe "Test value 3"
+        }
+
+        @Test
+        fun `when provided with Json containing correct keys and values in different order should return list with these values in order they appear in constructor`() {
+            val flowParameters = RpcStartFlowRequestParameters(
+                "{\"firstParameter\":\"Test value 1\", \"thirdParameter\":\"Test value 3\", \"secondParameter\":1234567}"
+            )
+
+            val result = extractor.extractParameters(flowClass, flowParameters)
+
+            result.size shouldBe 3
+            result[0] shouldBe "Test value 1"
+            result[1] shouldBe 1234567
+            result[2] shouldBe "Test value 3"
+        }
+    }
 }
