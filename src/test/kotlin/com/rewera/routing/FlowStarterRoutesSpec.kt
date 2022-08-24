@@ -2,7 +2,7 @@ package com.rewera.routing
 
 import com.rewera.models.FlowStatus
 import com.rewera.models.RpcFlowOutcomeResponse
-import com.rewera.modules.JacksonBuilder
+import com.rewera.modules.Jackson
 import com.rewera.testdata.TestData.FlowResult
 import com.rewera.testdata.TestData.flowHandleWithClientId
 import io.kotest.matchers.shouldBe
@@ -89,7 +89,7 @@ class FlowStarterRoutesSpec : MockedCordaRpcConnectionIntegrationTestBase() {
 
                 val response = client.get("/api/v1/flowstarter/flowoutcomeforclientid/$clientId")
 
-                JacksonBuilder.jackson.readValue(
+                Jackson.mapper.readValue(
                     response.bodyAsText(),
                     RpcFlowOutcomeResponse::class.java
                 ) shouldBe RpcFlowOutcomeResponse(

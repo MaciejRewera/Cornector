@@ -10,14 +10,13 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.text.SimpleDateFormat
 
 
-object JacksonBuilder {
+object Jackson {
 
-    val jackson: ObjectMapper by lazy { jacksonObjectMapper().configure() }
+    val mapper: ObjectMapper by lazy { jacksonObjectMapper().configure().registerModule(strictStringDeserializerModule) }
 
     fun ObjectMapper.configure(): ObjectMapper =
         this
             .registerModule(kotlinModule)
-            .registerModule(strictStringDeserializerModule)
             .configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false)
             .configure(DeserializationFeature.ACCEPT_FLOAT_AS_INT, false)
             .apply {
