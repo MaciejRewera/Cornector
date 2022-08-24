@@ -42,6 +42,8 @@ fun Route.flowStarterRoutes(flowStarterController: FlowStarterController) {
 
         post("/startflow") {}
 
+        post("/startflowtyped") {}
+
         get("/flowoutcomeforclientid/{clientid}") {
             val clientId = call.parameters["clientid"]
 
