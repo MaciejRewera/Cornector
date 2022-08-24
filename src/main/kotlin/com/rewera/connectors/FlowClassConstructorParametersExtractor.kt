@@ -19,8 +19,8 @@ class FlowClassConstructorParametersExtractor {
             constructorParameters: List<KParameter>,
             mapOfActualParams: Map<String, JsonNode>
         ) {
-            val mandatoryParameterNames = constructorParameters.filterNot { it.isOptional }.map { it.name!! }
-            val missingParameterKeys = mandatoryParameterNames.minus(mapOfActualParams.keys)
+            val parameterNames = constructorParameters.map { it.name!! }
+            val missingParameterKeys = parameterNames.minus(mapOfActualParams.keys)
 
             if (missingParameterKeys.isNotEmpty())
                 throw IllegalArgumentException("Constructor parameters [${missingParameterKeys.joinToString(", ")}] for flow [${flowClass.name}] were not provided.")
@@ -43,26 +43,14 @@ class FlowClassConstructorParametersExtractor {
         validateForMissingParams(constructorParameters, mapOfActualParams)
         validateForAdditionalParams(constructorParameters, mapOfActualParams)
 
-        return constructorParameters.mapNotNull {
-            if (it.isOptional)
-                extractSingleOptionalParameter(it, mapOfActualParams)
-            else
-                extractSingleParameter(it, mapOfActualParams)
-        }
+        return constructorParameters.map { extractSingleParameter(it, mapOfActualParams) }
     }
 
     private fun extractSingleParameter(parameter: KParameter, mapOfActualParams: Map<String, JsonNode>): Any {
         val parameterClass: Class<*> = Class.forName(parameter.type.jvmErasure.javaObjectType.typeName) as Class<*>
-        val rawValue = mapOfActualParams[parameter.name!!]
-            ?: throw NoSuchElementException("Cannot find parameter [${parameter.name!!}]")
-
-        return Jackson.mapper.treeToValue(rawValue, parameterClass)
-    }
-
-    private fun extractSingleOptionalParameter(parameter: KParameter, mapOfActualParams: Map<String, JsonNode>): Any? {
-        val parameterClass: Class<*> = Class.forName(parameter.type.jvmErasure.javaObjectType.typeName) as Class<*>
 
         return mapOfActualParams[parameter.name!!]
             ?.let { Jackson.mapper.treeToValue(it, parameterClass) }
+            ?: throw NoSuchElementException("Cannot find parameter [${parameter.name!!}]")
     }
 }

@@ -104,66 +104,6 @@ class FlowClassConstructorParametersExtractorSpec {
             result.size shouldBe 1
             result.first() shouldBe "Test Value"
         }
-
-        //TODO: Test case for listing all missing parameters by name
-
-    }
-
-
-    @Nested
-    @DisplayName("When provided with flow that has single optional parameter in primary constructor")
-    inner class OptionalSingleParameterFlowSpec {
-
-        inner class OptionalSingleParameterFlow(someParameter: String = "Some default value") : FlowLogic<String>() {
-            override fun call(): String = "SingleParameterFlow result should be here."
-        }
-
-        private val flowClass = OptionalSingleParameterFlow::class.java
-        private val flowName =
-            "com.rewera.connectors.FlowClassConstructorParametersExtractorSpec\$OptionalSingleParameterFlowSpec\$OptionalSingleParameterFlow"
-
-        @Test
-        fun `when provided with empty Json should return empty list`() {
-            val flowParameters = RpcStartFlowRequestParameters("{}")
-
-            extractor.extractParameters(flowClass, flowParameters) shouldBe emptyList()
-        }
-
-        @Test
-        fun `when provided with invalid Json should throw an exception`() {
-            val flowParameters = RpcStartFlowRequestParameters("{\"This is\":\"not\" a Json")
-
-            val exc = shouldThrow<JsonParseException> { extractor.extractParameters(flowClass, flowParameters) }
-            exc.message shouldInclude "Unexpected character ('a' (code 97)): was expecting comma to separate Object entries"
-        }
-
-        @Test
-        fun `when provided with Json containing different key should throw an exception`() {
-            val flowParameters = RpcStartFlowRequestParameters("{\"incorrectKey\":\"Test Value\"}")
-
-            val exc = shouldThrow<IllegalArgumentException> { extractor.extractParameters(flowClass, flowParameters) }
-            exc.message shouldBe "Additional parameters [incorrectKey] for flow [$flowName] found."
-        }
-
-        @Test
-        fun `when provided with Json containing additional key should throw an exception`() {
-            val flowParameters =
-                RpcStartFlowRequestParameters("{\"someParameter\":\"Test Value\",\"extraParameter\":\"Test Value 2\"}")
-
-            val exc = shouldThrow<IllegalArgumentException> { extractor.extractParameters(flowClass, flowParameters) }
-            exc.message shouldBe "Additional parameters [extraParameter] for flow [$flowName] found."
-        }
-
-        @Test
-        fun `when provided with Json containing correct key and value should return list with this value`() {
-            val flowParameters = RpcStartFlowRequestParameters("{\"someParameter\":\"Test Value\"}")
-
-            val result = extractor.extractParameters(flowClass, flowParameters)
-
-            result.size shouldBe 1
-            result.first() shouldBe "Test Value"
-        }
-
     }
 
     @Nested
