@@ -25,7 +25,7 @@ class CordaNodeConnector @Inject constructor(
         flowName: String,
         flowParameters: RpcStartFlowRequestParameters
     ): RpcStartFlowResponse {
-        val flowClass: Class<out FlowLogic<*>> = Class.forName(flowName) as Class<out FlowLogic<*>>
+        val flowClass: Class<out FlowLogic<*>> = buildClassFrom(flowName)
         val flowHandle =
             cordaRpcOpsFactory.rpcOps.startFlowDynamicWithClientId(clientId, flowClass, flowParameters.parametersInJson)
 
@@ -37,7 +37,7 @@ class CordaNodeConnector @Inject constructor(
         flowName: String,
         flowParameters: RpcStartFlowRequestParameters
     ): RpcStartFlowResponse {
-        val flowClass: Class<out FlowLogic<*>> = Class.forName(flowName) as Class<out FlowLogic<*>>
+        val flowClass: Class<out FlowLogic<*>> = buildClassFrom(flowName)
         val flowParametersList = parametersExtractor.extractParameters(flowClass, flowParameters)
 
         val flowHandle =
@@ -49,4 +49,6 @@ class CordaNodeConnector @Inject constructor(
 
         return RpcStartFlowResponse(flowHandle.clientId, FlowId(flowHandle.id.uuid))
     }
+
+    private fun buildClassFrom(flowName: String) = Class.forName(flowName) as Class<out FlowLogic<*>>
 }

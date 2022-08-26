@@ -129,7 +129,6 @@ class FlowStarterControllerSpec {
         }
     }
 
-
     @Nested
     @DisplayName("FlowStarterController on startFlow")
     inner class StartFlowSpec {

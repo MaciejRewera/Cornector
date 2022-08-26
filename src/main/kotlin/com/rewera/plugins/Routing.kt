@@ -2,11 +2,13 @@ package com.rewera.plugins
 
 import com.rewera.controllers.ControllersRegistry
 import com.rewera.controllers.FlowStarterController
+import com.rewera.models.RpcStartFlowRequest
 import com.rewera.modules.Jackson.configure
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
@@ -27,7 +29,7 @@ fun Application.configureRouting(controllersRegistry: ControllersRegistry) {
         }
 
         route("/api/v2") {
-            post("/startflow") {}
+            post("/startflowtyped") {}
         }
     }
 }
@@ -51,7 +53,8 @@ fun Route.flowStarterRoutes(flowStarterController: FlowStarterController) {
         }
 
         post("/startflow") {
-
+            val rpcStartFlowRequest = call.receive<RpcStartFlowRequest>()
+            call.respond(flowStarterController.startFlow(rpcStartFlowRequest))
         }
 
 

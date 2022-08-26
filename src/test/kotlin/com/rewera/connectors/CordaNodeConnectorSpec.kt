@@ -20,7 +20,6 @@ import org.mockito.Mockito
 import org.mockito.kotlin.*
 import java.util.*
 
-
 class CordaNodeConnectorSpec {
 
     private val cordaRpcOpsFactory = Mockito.mock(CordaRpcOpsFactory::class.java)
@@ -232,7 +231,11 @@ class CordaNodeConnectorSpec {
             cordaNodeConnector.startFlowTyped(clientId, multipleParametersFlowName, multipleFlowParams)
 
             val expectedVararg = paramExtractorReturnedValues.toTypedArray()
-            verify(rpcOps).startFlowDynamicWithClientId(clientId, MultipleParametersTestFlow::class.java, *expectedVararg)
+            verify(rpcOps).startFlowDynamicWithClientId(
+                clientId,
+                MultipleParametersTestFlow::class.java,
+                *expectedVararg
+            )
         }
 
     }
