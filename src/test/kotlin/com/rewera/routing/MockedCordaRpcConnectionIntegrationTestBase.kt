@@ -6,7 +6,6 @@ import com.google.inject.Injector
 import com.rewera.connectors.CordaRpcOpsFactory
 import com.rewera.instance
 import com.rewera.plugins.configureRouting
-import com.rewera.plugins.configureSerialization
 import io.ktor.server.application.*
 import io.ktor.server.config.*
 import io.ktor.server.testing.*
@@ -48,7 +47,6 @@ abstract class MockedCordaRpcConnectionIntegrationTestBase {
     }
 
     private fun Application.testModule() {
-        configureSerialization()
         configureRouting(testInjector.instance())
     }
 }

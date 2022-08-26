@@ -2,12 +2,18 @@ package com.rewera.plugins
 
 import com.rewera.controllers.ControllersRegistry
 import com.rewera.controllers.FlowStarterController
+import com.rewera.modules.Jackson.configure
+import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
+import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
 fun Application.configureRouting(controllersRegistry: ControllersRegistry) {
+    install(ContentNegotiation) {
+        jackson { this.configure() }
+    }
 
     routing {
         get("/") {
@@ -18,6 +24,10 @@ fun Application.configureRouting(controllersRegistry: ControllersRegistry) {
             flowManagerRoutes()
             flowStarterRoutes(controllersRegistry.flowStarterController)
             vaultQueryRoutes()
+        }
+
+        route("/api/v2") {
+            post("/startflow") {}
         }
     }
 }
@@ -40,9 +50,10 @@ fun Route.flowStarterRoutes(flowStarterController: FlowStarterController) {
             call.respond(flowStarterController.getRegisteredFlows())
         }
 
-        post("/startflow") {}
+        post("/startflow") {
 
-        post("/startflowtyped") {}
+        }
+
 
         get("/flowoutcomeforclientid/{clientid}") {
             val clientId = call.parameters["clientid"]
