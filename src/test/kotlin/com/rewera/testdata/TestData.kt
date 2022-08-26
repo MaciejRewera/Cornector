@@ -8,6 +8,8 @@ import java.util.*
 
 object TestData {
 
+    const val clientId = "test-client-id"
+
     data class FlowResult(val value1: String, val value2: Int)
 
     fun flowHandleWithClientId(clientId: String, returnValue: FlowResult) = object : FlowHandleWithClientId<FlowResult> {

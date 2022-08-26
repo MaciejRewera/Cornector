@@ -2,6 +2,7 @@ package com.rewera.connectors
 
 import com.rewera.models.RpcStartFlowRequestParameters
 import com.rewera.testdata.TestData.FlowResult
+import com.rewera.testdata.TestData.clientId
 import com.rewera.testdata.TestData.flowHandleWithClientId
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -67,7 +68,6 @@ class CordaNodeConnectorSpec {
     @DisplayName("CordaNodeConnector on getFlowOutcomeForClientId")
     inner class GetFlowOutcomeForClientIdSpec {
 
-        private val clientId = "test-client-id"
         private val testReturnValue = FlowResult("Test value", 1234567)
 
         @Test
@@ -100,7 +100,6 @@ class CordaNodeConnectorSpec {
         }
 
         private val flowName = "com.rewera.connectors.CordaNodeConnectorSpec\$StartFlowSpec\$SingleParameterTestFlow"
-        private val clientId = "test-client-id"
         private val flowIdValue = UUID.randomUUID()
         private val flowHandle =
             FlowHandleWithClientIdImpl(StateMachineRunId(flowIdValue), doneFuture("Result"), clientId)
@@ -169,7 +168,6 @@ class CordaNodeConnectorSpec {
             "com.rewera.connectors.CordaNodeConnectorSpec\$StartFlowTypedSpec\$SingleParameterTestFlow"
         private val multipleParametersFlowName =
             "com.rewera.connectors.CordaNodeConnectorSpec\$StartFlowTypedSpec\$MultipleParametersTestFlow"
-        private val clientId = "test-client-id"
         private val flowIdValue = UUID.randomUUID()
         private val someParameterValue = "Test param value"
         private val flowHandle =

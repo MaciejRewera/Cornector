@@ -1,10 +1,9 @@
 package com.rewera.controllers
 
 import com.rewera.connectors.CordaNodeConnector
-import com.rewera.models.ExceptionDigest
-import com.rewera.models.FlowStatus
-import com.rewera.models.RpcFlowOutcomeResponse
+import com.rewera.models.*
 import com.rewera.testdata.TestData.FlowResult
+import com.rewera.testdata.TestData.clientId
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.ktor.server.plugins.*
@@ -16,6 +15,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.*
+import java.util.*
 import java.util.concurrent.CompletionException
 
 
@@ -56,7 +56,6 @@ class FlowStarterControllerSpec {
     @DisplayName("FlowStarterController on getFlowOutcomeForClientId")
     inner class GetFlowOutcomeForClientIdSpec {
 
-        private val clientId = "test-client-id"
         private val testReturnValue = FlowResult("Test value", 1234567)
 
         @Test
@@ -127,6 +126,35 @@ class FlowStarterControllerSpec {
             )
 
             result shouldBe expectedResult
+        }
+    }
+
+
+    @Nested
+    @DisplayName("FlowStarterController on startFlow")
+    inner class StartFlowSpec {
+
+        private val flowName = "test.flow.name"
+        private val jsonParams =  RpcStartFlowRequestParameters("There should be parameters in JSON")
+
+        @Test
+        fun `should call CordaNodeConnector`() {
+            whenever(cordaNodeConnector.startFlow(any(), any(), any()))
+                .thenReturn(RpcStartFlowResponse("This is test startFlow response", FlowId(UUID.randomUUID())))
+            val rpcStartFlowRequest = RpcStartFlowRequest(clientId, flowName, jsonParams)
+
+            flowStarterController.startFlow(rpcStartFlowRequest)
+
+            verify(cordaNodeConnector).startFlow(eq(clientId), eq(flowName), eq(jsonParams))
+        }
+
+        @Test
+        fun `should return value returned by CordaNodeConnector`() {
+            val response = RpcStartFlowResponse("This is test startFlow response", FlowId(UUID.randomUUID()))
+            whenever(cordaNodeConnector.startFlow(any(), any(), any())).thenReturn(response)
+            val rpcStartFlowRequest = RpcStartFlowRequest(clientId, flowName, jsonParams)
+
+            flowStarterController.startFlow(rpcStartFlowRequest) shouldBe response
         }
     }
 
