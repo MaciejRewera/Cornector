@@ -3,10 +3,8 @@ package com.rewera.controllers
 import com.google.inject.Inject
 import com.google.inject.Singleton
 import com.rewera.connectors.CordaNodeConnector
-import com.rewera.models.ExceptionDigest
-import com.rewera.models.FlowStatus
-import com.rewera.models.RpcFlowOutcomeResponse
-import com.rewera.modules.JacksonBuilder
+import com.rewera.models.*
+import com.rewera.modules.Jackson
 import io.ktor.server.plugins.*
 
 @Singleton
@@ -19,7 +17,7 @@ class FlowStarterController @Inject constructor(private val cordaNodeConnector: 
             ?.thenApply {
                 RpcFlowOutcomeResponse(
                     status = FlowStatus.COMPLETED,
-                    resultJson = JacksonBuilder.jackson.writeValueAsString(it)
+                    resultJson = Jackson.mapper.writeValueAsString(it)
                 )
             }?.exceptionally {
                 RpcFlowOutcomeResponse(
@@ -29,4 +27,10 @@ class FlowStarterController @Inject constructor(private val cordaNodeConnector: 
             }?.getNow(RpcFlowOutcomeResponse(status = FlowStatus.RUNNING))
             ?: throw NotFoundException()
 
+    fun startFlow(rpcStartFlowRequest: RpcStartFlowRequest): RpcStartFlowResponse =
+        cordaNodeConnector.startFlow(
+            clientId = rpcStartFlowRequest.clientId,
+            flowName = rpcStartFlowRequest.flowName,
+            flowParameters = rpcStartFlowRequest.parameters
+        )
 }

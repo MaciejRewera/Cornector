@@ -3,6 +3,7 @@ val kotlin_version: String by project
 val logback_version: String by project
 val corda_gradle_plugins_version: String by project
 val corda_release_version: String by project
+val kmongo_version: String by project
 
 plugins {
     application
@@ -37,9 +38,13 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("com.google.inject:guice:5.1.0")
 
+    implementation("org.litote.kmongo:kmongo:$kmongo_version")
+//    implementation("org.litote.kmongo:kmongo-async:$kmongo_version")
+
     implementation("net.corda:corda-rpc:$corda_release_version")
 
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktor_version")
+    testImplementation("io.ktor:ktor-client-content-negotiation-jvm:$ktor_version")
     testImplementation("io.kotest:kotest-runner-junit5:5.4.1")
     runtimeOnly("io.kotest:kotest-assertions-core:5.4.1")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:5.8.2")
