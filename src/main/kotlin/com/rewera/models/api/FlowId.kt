@@ -1,4 +1,4 @@
-package com.rewera.models
+package com.rewera.models.api
 
 import java.util.*
 

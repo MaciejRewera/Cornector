@@ -1,6 +1,6 @@
 package com.rewera.connectors
 
-import com.rewera.models.RpcStartFlowRequestParameters
+import com.rewera.models.api.RpcStartFlowRequestParameters
 import com.rewera.testdata.TestData.FlowResult
 import com.rewera.testdata.TestData.clientId
 import com.rewera.testdata.TestData.flowHandleWithClientId

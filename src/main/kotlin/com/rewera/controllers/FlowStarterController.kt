@@ -3,7 +3,7 @@ package com.rewera.controllers
 import com.google.inject.Inject
 import com.google.inject.Singleton
 import com.rewera.connectors.CordaNodeConnector
-import com.rewera.models.*
+import com.rewera.models.api.*
 import com.rewera.modules.Jackson
 import io.ktor.server.plugins.*
 

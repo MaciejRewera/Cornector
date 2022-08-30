@@ -1,6 +1,6 @@
 package com.rewera.routing
 
-import com.rewera.models.*
+import com.rewera.models.api.*
 import com.rewera.modules.Jackson
 import com.rewera.testdata.TestData
 import com.rewera.testdata.TestData.FlowResult

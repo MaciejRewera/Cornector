@@ -1,7 +1,7 @@
 package com.rewera.controllers
 
 import com.rewera.connectors.CordaNodeConnector
-import com.rewera.models.*
+import com.rewera.models.api.*
 import com.rewera.testdata.TestData.FlowResult
 import com.rewera.testdata.TestData.clientId
 import io.kotest.assertions.throwables.shouldThrow
