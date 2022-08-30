@@ -1,6 +1,7 @@
 package com.rewera.plugins
 
 import com.rewera.controllers.ControllersRegistry
+import com.rewera.controllers.FlowManagerController
 import com.rewera.controllers.FlowStarterController
 import com.rewera.models.RpcStartFlowRequest
 import com.rewera.modules.Jackson.configure
@@ -23,7 +24,7 @@ fun Application.configureRouting(controllersRegistry: ControllersRegistry) {
         }
 
         route("/api/v1") {
-            flowManagerRoutes()
+            flowManagerRoutes(controllersRegistry.flowManagerController)
             flowStarterRoutes(controllersRegistry.flowStarterController)
             vaultQueryRoutes()
         }
@@ -34,10 +35,15 @@ fun Application.configureRouting(controllersRegistry: ControllersRegistry) {
     }
 }
 
-fun Route.flowManagerRoutes() {
+fun Route.flowManagerRoutes(flowManagerController: FlowManagerController) {
     route("/flowmanagerrpcops") {
 
-        post("/killflow/{flowid}") {}
+        post("/killflow/{flowid}") {
+            val flowId = call.parameters["flowid"]
+
+            flowId?.let { call.respond(flowManagerController.killFlow(it)) }
+                ?: throw MissingRequestParameterException("flowid")
+        }
 
         get("/listactive") {}
 
@@ -56,7 +62,6 @@ fun Route.flowStarterRoutes(flowStarterController: FlowStarterController) {
             val rpcStartFlowRequest = call.receive<RpcStartFlowRequest>()
             call.respond(flowStarterController.startFlow(rpcStartFlowRequest))
         }
-
 
         get("/flowoutcomeforclientid/{clientid}") {
             val clientId = call.parameters["clientid"]

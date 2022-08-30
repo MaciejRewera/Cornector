@@ -6,6 +6,8 @@ import com.rewera.models.FlowId
 import com.rewera.models.RpcStartFlowRequestParameters
 import com.rewera.models.RpcStartFlowResponse
 import net.corda.core.flows.FlowLogic
+import net.corda.core.flows.StateMachineRunId
+import java.util.*
 import java.util.concurrent.CompletableFuture
 
 @Singleton
@@ -51,4 +53,6 @@ class CordaNodeConnector @Inject constructor(
     }
 
     private fun buildClassFrom(flowName: String) = Class.forName(flowName) as Class<out FlowLogic<*>>
+
+    fun killFlow(flowId: UUID): Boolean = cordaRpcOpsFactory.rpcOps.killFlow(StateMachineRunId(flowId))
 }

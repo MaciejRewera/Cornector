@@ -237,6 +237,29 @@ class CordaNodeConnectorSpec {
                 *expectedVararg
             )
         }
+    }
 
+
+    @Nested
+    @DisplayName("CordaNodeConnector on killFlow")
+    inner class KillFlowSpec {
+
+        private val flowIdValue = UUID.randomUUID()
+
+        @Test
+        fun `should call CordaRPCOps`() {
+            whenever(rpcOps.killFlow(any())).thenReturn(false)
+
+            cordaNodeConnector.killFlow(flowIdValue)
+
+            verify(rpcOps).killFlow(eq(StateMachineRunId(flowIdValue)))
+        }
+
+        @Test
+        fun `should return value from CordaRPCOps`() {
+            whenever(rpcOps.killFlow(any())).thenReturn(true)
+
+            cordaNodeConnector.killFlow(flowIdValue) shouldBe true
+        }
     }
 }

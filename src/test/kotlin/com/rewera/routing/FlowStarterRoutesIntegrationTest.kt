@@ -12,23 +12,15 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.jackson.*
-import net.corda.core.messaging.CordaRPCOps
-import org.junit.jupiter.api.*
-import org.mockito.Mockito
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.mockito.kotlin.any
-import org.mockito.kotlin.reset
 import org.mockito.kotlin.whenever
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FlowStarterRoutesIntegrationTest : MockedCordaRpcConnectionIntegrationTestBase() {
-
-    private val rpcOps = Mockito.mock(CordaRPCOps::class.java)
-
-    @BeforeEach
-    fun setup() {
-        reset(rpcOps)
-        whenever(cordaRpcOpsFactory.rpcOps).thenReturn(rpcOps)
-    }
 
     @Test
     fun `registeredflows endpoint should return the value from CordaRPCOps`() = testApplicationWithMockedRpcConnection {
@@ -55,7 +47,7 @@ class FlowStarterRoutesIntegrationTest : MockedCordaRpcConnectionIntegrationTest
         }
 
         @Test
-        fun `should return NotFound when no flow for clientid found`() = testApplicationWithMockedRpcConnection {
+        fun `should return NotFound when NO flow for clientid found`() = testApplicationWithMockedRpcConnection {
             whenever(rpcOps.reattachFlowWithClientId<Any>(any())).thenReturn(null)
 
             val response = client.get("/api/v1/flowstarter/flowoutcomeforclientid/$clientId")
@@ -65,26 +57,27 @@ class FlowStarterRoutesIntegrationTest : MockedCordaRpcConnectionIntegrationTest
         }
 
         @Test
-        fun `should return the value from CordaRPCOps`() = testApplicationWithMockedRpcConnection {
-            val testFlowResult = FlowResult("Test value", 1234567)
-            whenever(rpcOps.reattachFlowWithClientId<FlowResult>(any()))
-                .thenReturn(flowHandleWithClientId(clientId, testFlowResult))
+        fun `should return the value from CordaRPCOps when flow for clientid has been found`() =
+            testApplicationWithMockedRpcConnection {
+                val testFlowResult = FlowResult("Test value", 1234567)
+                whenever(rpcOps.reattachFlowWithClientId<FlowResult>(any()))
+                    .thenReturn(flowHandleWithClientId(clientId, testFlowResult))
 
-            val response = client.get("/api/v1/flowstarter/flowoutcomeforclientid/$clientId")
+                val response = client.get("/api/v1/flowstarter/flowoutcomeforclientid/$clientId")
 
-            response.status shouldBe HttpStatusCode.OK
-            response.bodyAsText() shouldBe
-                    """{"exceptionDigest":null,"resultJson":"{\"value1\":\"Test value\",\"value2\":1234567}","status":"COMPLETED"}"""
+                response.status shouldBe HttpStatusCode.OK
+                response.bodyAsText() shouldBe
+                        """{"exceptionDigest":null,"resultJson":"{\"value1\":\"Test value\",\"value2\":1234567}","status":"COMPLETED"}"""
 
-            Jackson.mapper.readValue(
-                response.bodyAsText(),
-                RpcFlowOutcomeResponse::class.java
-            ) shouldBe RpcFlowOutcomeResponse(
-                status = FlowStatus.COMPLETED,
-                exceptionDigest = null,
-                resultJson = """{"value1":"Test value","value2":1234567}"""
-            )
-        }
+                Jackson.mapper.readValue(
+                    response.bodyAsText(),
+                    RpcFlowOutcomeResponse::class.java
+                ) shouldBe RpcFlowOutcomeResponse(
+                    status = FlowStatus.COMPLETED,
+                    exceptionDigest = null,
+                    resultJson = """{"value1":"Test value","value2":1234567}"""
+                )
+            }
     }
 
     @Nested
