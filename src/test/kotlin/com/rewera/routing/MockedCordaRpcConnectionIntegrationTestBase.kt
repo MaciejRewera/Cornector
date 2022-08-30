@@ -9,20 +9,26 @@ import com.rewera.plugins.configureRouting
 import io.ktor.server.application.*
 import io.ktor.server.config.*
 import io.ktor.server.testing.*
+import net.corda.core.messaging.CordaRPCOps
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
+import org.mockito.Mockito
 import org.mockito.kotlin.reset
+import org.mockito.kotlin.whenever
 
 abstract class MockedCordaRpcConnectionIntegrationTestBase {
+
+    protected val rpcOps = Mockito.mock(CordaRPCOps::class.java)
 
     private val testInjector: Injector = Guice.createInjector(ConnectorsMockModule())
 
     @Inject
-    protected lateinit var cordaRpcOpsFactory: CordaRpcOpsFactory
+    private lateinit var cordaRpcOpsFactory: CordaRpcOpsFactory
 
     @BeforeEach
     fun resetCornectorRpcOps() {
-        reset(cordaRpcOpsFactory)
+        reset(cordaRpcOpsFactory, rpcOps)
+        whenever(cordaRpcOpsFactory.rpcOps).thenReturn(rpcOps)
     }
 
     @BeforeAll
@@ -37,7 +43,6 @@ abstract class MockedCordaRpcConnectionIntegrationTestBase {
         setupTestModules()
         block()
     }
-
 
     private fun ApplicationTestBuilder.setupTestModules() {
         environment {
