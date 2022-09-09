@@ -8,6 +8,7 @@ import com.mongodb.client.model.IndexOptions
 import com.mongodb.client.result.DeleteResult
 import com.mongodb.client.result.InsertOneResult
 import com.rewera.models.FlowResult
+import com.rewera.models.api.FlowStatus
 import com.rewera.modules.Jackson
 import org.bson.Document
 import org.bson.UuidRepresentation
@@ -54,4 +55,6 @@ class FlowResultsRepository {
 
     fun findByClientId(clientId: String): FlowResult<*>? = collection.findOne(FlowResult<*>::clientId eq clientId)
 
+    fun findByStatus(status: FlowStatus): List<FlowResult<*>> =
+        collection.find(FlowResult<*>::status eq status).toList()
 }

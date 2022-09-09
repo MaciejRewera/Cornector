@@ -7,6 +7,7 @@ import com.rewera.testdata.TestData.randomUuid
 import com.rewera.testdata.TestData.randomUuidString
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldExist
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldInclude
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -183,7 +184,6 @@ class FlowResultsRepositoryIntegrationTest {
         }
     }
 
-
     @Nested
     @DisplayName("FlowResultsRepository on findByClientId")
     inner class FindByClientIdTest {
@@ -195,9 +195,9 @@ class FlowResultsRepositoryIntegrationTest {
 
         @Test
         fun `when there are NO documents with given clientId in the DB should return null`() {
-            repository.insert(FlowResult<Any>("other-clientId"))
+            repository.insert(FlowResult<Any>("clientId"))
 
-            repository.findByClientId("clientId") shouldBe null
+            repository.findByClientId("other-clientId") shouldBe null
         }
 
         @Test
@@ -258,5 +258,69 @@ class FlowResultsRepositoryIntegrationTest {
             result3 shouldBe flowResult3
             result3?.result shouldBe null
         }
+    }
+
+
+    @Nested
+    @DisplayName("FlowResultsRepository on findByStatus")
+    inner class FindByStatusTest {
+
+        @Test
+        fun `when there are NO documents in the DB should return empty list`() {
+            repository.findByStatus(FlowStatus.RUNNING) shouldBe emptyList()
+            repository.findByStatus(FlowStatus.COMPLETED) shouldBe emptyList()
+            repository.findByStatus(FlowStatus.FAILED) shouldBe emptyList()
+        }
+
+        @Test
+        fun `when there are NO documents in the DB with given status should return empty list`() {
+            repository.insert(FlowResult<Any>("clientId", status = FlowStatus.RUNNING))
+
+            repository.findByStatus(FlowStatus.COMPLETED) shouldBe emptyList()
+            repository.findByStatus(FlowStatus.FAILED) shouldBe emptyList()
+        }
+
+        @Test
+        fun `when there is single document in the DB with given status should return this document`() {
+            val flowResult = FlowResult<Any>("clientId", status = FlowStatus.RUNNING)
+            repository.insert(flowResult)
+
+            repository.findByStatus(FlowStatus.RUNNING) shouldBe listOf(flowResult)
+        }
+
+        @Test
+        fun `when there are multiple documents in the DB with given status should return all of them`() {
+            val flowResult = FlowResult<Any>("clientId-1", status = FlowStatus.RUNNING)
+            val flowResults = listOf(
+                flowResult,
+                flowResult.copy(clientId = "clientId-2"),
+                flowResult.copy(clientId = "clientId-3")
+            )
+            flowResults.forEach { repository.insert(it) }
+
+            val result = repository.findByStatus(FlowStatus.RUNNING)
+
+            result.size shouldBe 3
+            result.forEach { flowResults shouldContain it }
+        }
+
+        @Test
+        fun `when there are multiple documents in the DB should return only documents with given status`() {
+            val flowResult = FlowResult<Any>("clientId-1", status = FlowStatus.RUNNING)
+            val flowResults = listOf(
+                flowResult,
+                flowResult.copy(clientId = "clientId-2", status = FlowStatus.FAILED),
+                flowResult.copy(clientId = "clientId-3", status = FlowStatus.COMPLETED),
+                flowResult.copy(clientId = "clientId-4")
+            )
+            flowResults.forEach { repository.insert(it) }
+
+            val result = repository.findByStatus(FlowStatus.RUNNING)
+
+            result.size shouldBe 2
+            result shouldExist { it.clientId == "clientId-1" }
+            result shouldExist { it.clientId == "clientId-4" }
+        }
+
     }
 }
