@@ -1,16 +1,51 @@
 package com.rewera.repositories
 
 import com.google.inject.Singleton
+import com.mongodb.ConnectionString
+import com.mongodb.MongoClientSettings
 import com.mongodb.client.MongoCollection
+import com.mongodb.client.result.DeleteResult
+import com.mongodb.client.result.InsertOneResult
+import com.rewera.models.FlowResult
+import com.rewera.modules.Jackson
 import org.bson.Document
-import org.litote.kmongo.KMongo
+import org.bson.UuidRepresentation
+import org.litote.kmongo.*
+import org.litote.kmongo.util.KMongoUtil
+import java.util.*
+
 
 @Singleton
 class FlowResultsRepository {
 
-    private val client = KMongo.createClient()
-    private val database = client.getDatabase("cornector")
-    private val collection: MongoCollection<Document> = database.getCollection("FlowResults")
+    // TODO: Make connection configurable
+    private val connectionString = "mongodb://localhost:27017"
+    private val collectionName = "FlowResults"
 
-    fun getAll() = collection.find().toList()
+    private val clientSettings = MongoClientSettings.builder()
+        .applyConnectionString(ConnectionString(connectionString))
+        .uuidRepresentation(UuidRepresentation.STANDARD)
+        .codecRegistry(KMongoUtil.defaultCodecRegistry)
+        .build()
+
+    private val client = KMongo.createClient(clientSettings)
+    private val database = client.getDatabase("cornector")
+    private val collection: MongoCollection<FlowResult<*>> =
+        database.getCollection(collectionName, FlowResult::class.java)
+
+    init {
+        collection.ensureUniqueIndex(FlowResult<*>::flowId)
+        collection.ensureUniqueIndex(FlowResult<*>::clientId)
+    }
+
+    fun removeAll(): DeleteResult = collection.deleteMany(Document())
+
+    fun <A> insert(flowResult: FlowResult<A>): InsertOneResult =
+        collection.insertOne(Jackson.mapper.writeValueAsString(flowResult))
+
+    fun findAll(): List<FlowResult<*>> = collection.find().toList()
+
+    fun findByFlowId(flowId: UUID): FlowResult<*>? = collection.findOne(FlowResult<*>::flowId eq flowId.toString())
+
+
 }

@@ -11,6 +11,9 @@ object TestData {
 
     const val clientId = "test-client-id"
 
+    fun randomUuid(): UUID = UUID.randomUUID()
+    fun randomUuidString(): String = randomUuid().toString()
+
     data class FlowResult(val value1: String, val value2: Int)
 
     fun flowHandleWithClientId(clientId: String, returnValue: FlowResult) = object : FlowHandleWithClientId<FlowResult> {
