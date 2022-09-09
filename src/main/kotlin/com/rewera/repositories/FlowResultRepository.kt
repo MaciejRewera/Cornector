@@ -4,6 +4,7 @@ import com.google.inject.Singleton
 import com.mongodb.ConnectionString
 import com.mongodb.MongoClientSettings
 import com.mongodb.client.MongoCollection
+import com.mongodb.client.model.IndexOptions
 import com.mongodb.client.result.DeleteResult
 import com.mongodb.client.result.InsertOneResult
 import com.rewera.models.FlowResult
@@ -34,7 +35,11 @@ class FlowResultsRepository {
         database.getCollection(collectionName, FlowResult::class.java)
 
     init {
-        collection.ensureUniqueIndex(FlowResult<*>::flowId)
+        collection.ensureIndex(
+            FlowResult<*>::flowId,
+            indexOptions = IndexOptions().unique(true)
+                .partialFilterExpression(Document("flowId", Document("${MongoOperator.type}", "string")))
+        )
         collection.ensureUniqueIndex(FlowResult<*>::clientId)
     }
 
@@ -47,5 +52,6 @@ class FlowResultsRepository {
 
     fun findByFlowId(flowId: UUID): FlowResult<*>? = collection.findOne(FlowResult<*>::flowId eq flowId.toString())
 
+    fun findByClientId(clientId: String): FlowResult<*>? = collection.findOne(FlowResult<*>::clientId eq clientId)
 
 }

@@ -9,7 +9,7 @@ import java.util.*
 
 object TestData {
 
-    const val clientId = "test-client-id"
+    const val testClientId = "test-client-id"
 
     fun randomUuid(): UUID = UUID.randomUUID()
     fun randomUuidString(): String = randomUuid().toString()
