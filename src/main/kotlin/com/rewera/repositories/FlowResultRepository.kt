@@ -1,5 +1,6 @@
 package com.rewera.repositories
 
+import com.google.inject.Inject
 import com.google.inject.Singleton
 import com.mongodb.ConnectionString
 import com.mongodb.MongoClientSettings
@@ -11,6 +12,7 @@ import com.mongodb.client.result.UpdateResult
 import com.rewera.models.FlowResult
 import com.rewera.models.api.FlowStatus
 import com.rewera.modules.Jackson
+import io.ktor.server.config.*
 import org.bson.Document
 import org.bson.UuidRepresentation
 import org.litote.kmongo.*
@@ -19,10 +21,10 @@ import java.util.*
 
 
 @Singleton
-class FlowResultsRepository {
+class FlowResultsRepository @Inject constructor(config: ApplicationConfig) {
 
-    // TODO: Make connection configurable
-    private val connectionString = "mongodb://localhost:27017"
+    private val connectionString = config.property("mongodb.uri").getString()
+    private val databaseName = config.property("mongodb.databaseName").getString()
     private val collectionName = "FlowResults"
 
     private val clientSettings = MongoClientSettings.builder()
@@ -32,7 +34,7 @@ class FlowResultsRepository {
         .build()
 
     private val client = KMongo.createClient(clientSettings)
-    private val database = client.getDatabase("cornector")
+    private val database = client.getDatabase(databaseName)
     private val collection: MongoCollection<FlowResult<*>> =
         database.getCollection(collectionName, FlowResult::class.java)
 

@@ -12,6 +12,7 @@ import io.kotest.matchers.collections.shouldExist
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldInclude
 import io.kotest.matchers.types.shouldBeInstanceOf
+import io.ktor.server.config.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -19,7 +20,15 @@ import org.junit.jupiter.api.Test
 
 class FlowResultsRepositoryIntegrationTest {
 
-    private val repository = FlowResultsRepository()
+    private val testDatabaseUri = "mongodb://localhost:27017"
+    private val testDatabaseName = "test-cornector"
+
+    private val config = MapApplicationConfig(
+        ("mongodb.uri" to testDatabaseUri),
+        ("mongodb.databaseName" to testDatabaseName)
+    )
+
+    private val repository = FlowResultsRepository(config)
 
     @BeforeEach
     fun setup() {
@@ -35,7 +44,8 @@ class FlowResultsRepositoryIntegrationTest {
 
         repository.insert(flowResult1)
         val exc = shouldThrow<MongoWriteException> { repository.insert(flowResult2) }
-        exc.message shouldInclude "WriteError{code=11000, message='E11000 duplicate key error collection: cornector.FlowResults index: clientId_1 dup key"
+        exc.message shouldInclude "WriteError{code=11000, message='E11000 duplicate key error collection"
+        exc.message shouldInclude "FlowResults index: clientId_1 dup key"
     }
 
     @Test
@@ -50,7 +60,8 @@ class FlowResultsRepositoryIntegrationTest {
 
         repository.insert(flowResult1)
         val exc = shouldThrow<MongoWriteException> { repository.insert(flowResult2) }
-        exc.message shouldInclude "WriteError{code=11000, message='E11000 duplicate key error collection: cornector.FlowResults index: flowId_1 dup key"
+        exc.message shouldInclude "WriteError{code=11000, message='E11000 duplicate key error collection"
+        exc.message shouldInclude "FlowResults index: flowId_1 dup key"
     }
 
     @Test
@@ -134,7 +145,8 @@ class FlowResultsRepositoryIntegrationTest {
             repository.insertWithClientId(testClientId)
 
             val exc = shouldThrow<MongoWriteException> { repository.insertWithClientId(testClientId) }
-            exc.message shouldInclude "WriteError{code=11000, message='E11000 duplicate key error collection: cornector.FlowResults index: clientId_1 dup key"
+            exc.message shouldInclude "WriteError{code=11000, message='E11000 duplicate key error collection"
+            exc.message shouldInclude "FlowResults index: clientId_1 dup key"
         }
     }
 
