@@ -1,7 +1,7 @@
 package com.rewera.connectors
 
 import com.rewera.models.api.RpcStartFlowRequestParameters
-import com.rewera.testdata.TestData.FlowResult
+import com.rewera.testdata.TestData.TestFlowResult
 import com.rewera.testdata.TestData.flowHandleWithClientId
 import com.rewera.testdata.TestData.testClientId
 import io.kotest.assertions.throwables.shouldThrow
@@ -67,24 +67,24 @@ class CordaNodeConnectorSpec {
     @DisplayName("CordaNodeConnector on getFlowOutcomeForClientId")
     inner class GetFlowOutcomeForClientIdSpec {
 
-        private val testReturnValue = FlowResult("Test value", 1234567)
+        private val testReturnValue = TestFlowResult("Test value", 1234567)
 
         @Test
         suspend fun `should call CordaRPCOps`() {
-            whenever(rpcOps.reattachFlowWithClientId<FlowResult>(any()))
+            whenever(rpcOps.reattachFlowWithClientId<TestFlowResult>(any()))
                 .thenReturn(flowHandleWithClientId(testClientId, testReturnValue))
 
-            cordaNodeConnector.getFlowOutcomeForClientId<FlowResult>(testClientId)!!.await()
+            cordaNodeConnector.getFlowOutcomeForClientId<TestFlowResult>(testClientId)!!.await()
 
-            verify(rpcOps).reattachFlowWithClientId<FlowResult>(eq(testClientId))
+            verify(rpcOps).reattachFlowWithClientId<TestFlowResult>(eq(testClientId))
         }
 
         @Test
         suspend fun `should return Future with value returned by CordaRPCOps`() {
-            whenever(rpcOps.reattachFlowWithClientId<FlowResult>(any()))
+            whenever(rpcOps.reattachFlowWithClientId<TestFlowResult>(any()))
                 .thenReturn(flowHandleWithClientId(testClientId, testReturnValue))
 
-            val result = cordaNodeConnector.getFlowOutcomeForClientId<FlowResult>(testClientId)!!.await()
+            val result = cordaNodeConnector.getFlowOutcomeForClientId<TestFlowResult>(testClientId)!!.await()
 
             result shouldBe testReturnValue
         }

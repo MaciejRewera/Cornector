@@ -5,6 +5,7 @@ import com.rewera.models.FlowResult
 import com.rewera.models.api.FlowStatus
 import com.rewera.testdata.TestData.randomUuid
 import com.rewera.testdata.TestData.randomUuidString
+import com.rewera.testdata.TestData.testClientId
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldExist
@@ -27,7 +28,7 @@ class FlowResultsRepositoryIntegrationTest {
 
     @Test
     fun `FlowResultsRepository when trying to insert 2 FlowResults with the same clientId should throw an exception`() {
-        val clientId = "clientId"
+        val clientId = testClientId
         val flowResult1 =
             FlowResult(clientId = clientId, flowId = randomUuidString(), result = 123, status = FlowStatus.COMPLETED)
         val flowResult2 = flowResult1.copy(flowId = randomUuidString())
@@ -99,7 +100,12 @@ class FlowResultsRepositoryIntegrationTest {
     @Test
     fun `FlowResultsRepository on insert should insert document to Mongo`() {
         val flowResult =
-            FlowResult(clientId = "clientId", flowId = randomUuidString(), result = 123, status = FlowStatus.COMPLETED)
+            FlowResult(
+                clientId = testClientId,
+                flowId = randomUuidString(),
+                result = 123,
+                status = FlowStatus.COMPLETED
+            )
 
         repository.insert(flowResult)
         val result = repository.findAll()
@@ -119,7 +125,7 @@ class FlowResultsRepositoryIntegrationTest {
 
         @Test
         fun `when there are NO documents with given flowId in the DB should return null`() {
-            repository.insert(FlowResult<Any>("clientId", flowId = randomUuidString()))
+            repository.insert(FlowResult<Any>(testClientId, flowId = randomUuidString()))
 
             repository.findByFlowId(randomUuid()) shouldBe null
         }
@@ -127,7 +133,7 @@ class FlowResultsRepositoryIntegrationTest {
         @Test
         fun `when there is document with given flowId in the DB should return this document`() {
             val flowId = randomUuid()
-            val flowResult = FlowResult<Any>("clientId", flowId = flowId.toString())
+            val flowResult = FlowResult<Any>(testClientId, flowId = flowId.toString())
             repository.insert(flowResult)
 
             repository.findByFlowId(flowId) shouldBe flowResult
@@ -136,7 +142,7 @@ class FlowResultsRepositoryIntegrationTest {
         @Test
         fun `when there is document with given flowId and result in the DB should return this document with this result`() {
             val flowId = randomUuid()
-            val flowResult = FlowResult("clientId", flowId = flowId.toString(), result = "Some String Result")
+            val flowResult = FlowResult(testClientId, flowId = flowId.toString(), result = "Some String Result")
             repository.insert(flowResult)
 
             val result = repository.findByFlowId(flowId)
@@ -190,19 +196,19 @@ class FlowResultsRepositoryIntegrationTest {
 
         @Test
         fun `when there are NO documents in the DB should return null`() {
-            repository.findByClientId("clientId") shouldBe null
+            repository.findByClientId(testClientId) shouldBe null
         }
 
         @Test
         fun `when there are NO documents with given clientId in the DB should return null`() {
-            repository.insert(FlowResult<Any>("clientId"))
+            repository.insert(FlowResult<Any>(testClientId))
 
             repository.findByClientId("other-clientId") shouldBe null
         }
 
         @Test
         fun `when there is document with given clientId in the DB should return this document`() {
-            val clientId = "clientId"
+            val clientId = testClientId
             val flowResult = FlowResult<Any>(clientId)
             repository.insert(flowResult)
 
@@ -211,7 +217,7 @@ class FlowResultsRepositoryIntegrationTest {
 
         @Test
         fun `when there is document with given clientId and result in the DB should return this document with this result`() {
-            val clientId = "clientId"
+            val clientId = testClientId
             val flowResult = FlowResult(clientId, result = "Some String Result")
             repository.insert(flowResult)
 
@@ -260,7 +266,6 @@ class FlowResultsRepositoryIntegrationTest {
         }
     }
 
-
     @Nested
     @DisplayName("FlowResultsRepository on findByStatus")
     inner class FindByStatusTest {
@@ -274,7 +279,7 @@ class FlowResultsRepositoryIntegrationTest {
 
         @Test
         fun `when there are NO documents in the DB with given status should return empty list`() {
-            repository.insert(FlowResult<Any>("clientId", status = FlowStatus.RUNNING))
+            repository.insert(FlowResult<Any>(testClientId, status = FlowStatus.RUNNING))
 
             repository.findByStatus(FlowStatus.COMPLETED) shouldBe emptyList()
             repository.findByStatus(FlowStatus.FAILED) shouldBe emptyList()
@@ -282,7 +287,7 @@ class FlowResultsRepositoryIntegrationTest {
 
         @Test
         fun `when there is single document in the DB with given status should return this document`() {
-            val flowResult = FlowResult<Any>("clientId", status = FlowStatus.RUNNING)
+            val flowResult = FlowResult<Any>(testClientId, status = FlowStatus.RUNNING)
             repository.insert(flowResult)
 
             repository.findByStatus(FlowStatus.RUNNING) shouldBe listOf(flowResult)

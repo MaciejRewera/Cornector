@@ -14,11 +14,11 @@ object TestData {
     fun randomUuid(): UUID = UUID.randomUUID()
     fun randomUuidString(): String = randomUuid().toString()
 
-    data class FlowResult(val value1: String, val value2: Int)
+    data class TestFlowResult(val value1: String, val value2: Int)
 
-    fun flowHandleWithClientId(clientId: String, returnValue: FlowResult) = object : FlowHandleWithClientId<FlowResult> {
+    fun flowHandleWithClientId(clientId: String, returnValue: TestFlowResult) = object : FlowHandleWithClientId<TestFlowResult> {
         override val clientId: String = clientId
-        override val returnValue: CordaFuture<FlowResult> = doneFuture(returnValue)
+        override val returnValue: CordaFuture<TestFlowResult> = doneFuture(returnValue)
         override val id: StateMachineRunId = StateMachineRunId(UUID.randomUUID())
         override fun close() {}
     }

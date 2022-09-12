@@ -2,7 +2,7 @@ package com.rewera.controllers
 
 import com.rewera.connectors.CordaNodeConnector
 import com.rewera.models.api.*
-import com.rewera.testdata.TestData.FlowResult
+import com.rewera.testdata.TestData.TestFlowResult
 import com.rewera.testdata.TestData.testClientId
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -56,29 +56,29 @@ class FlowStarterControllerSpec {
     @DisplayName("FlowStarterController on getFlowOutcomeForClientId")
     inner class GetFlowOutcomeForClientIdSpec {
 
-        private val testReturnValue = FlowResult("Test value", 1234567)
+        private val testReturnValue = TestFlowResult("Test value", 1234567)
 
         @Test
         fun `should call CordaNodeConnector`() {
-            whenever(cordaNodeConnector.getFlowOutcomeForClientId<FlowResult>(any()))
+            whenever(cordaNodeConnector.getFlowOutcomeForClientId<TestFlowResult>(any()))
                 .thenReturn(doneFuture(testReturnValue).toCompletableFuture())
 
             flowStarterController.getFlowOutcomeForClientId(testClientId)
 
-            verify(cordaNodeConnector).getFlowOutcomeForClientId<FlowResult>(eq(testClientId))
+            verify(cordaNodeConnector).getFlowOutcomeForClientId<TestFlowResult>(eq(testClientId))
         }
 
         @Test
         fun `should throw NotFoundException when CordaNodeConnector returns null`() {
-            whenever(cordaNodeConnector.getFlowOutcomeForClientId<FlowResult>(any())).thenReturn(null)
+            whenever(cordaNodeConnector.getFlowOutcomeForClientId<TestFlowResult>(any())).thenReturn(null)
 
             shouldThrow<NotFoundException> { flowStarterController.getFlowOutcomeForClientId(testClientId) }
         }
 
         @Test
         fun `should return RpcFlowOutcomeResponse with status RUNNING when CordaNodeConnector returns unfinished future`() {
-            val unfinishedFuture = openFuture<FlowResult>().toCompletableFuture()
-            whenever(cordaNodeConnector.getFlowOutcomeForClientId<FlowResult>(any())).thenReturn(unfinishedFuture)
+            val unfinishedFuture = openFuture<TestFlowResult>().toCompletableFuture()
+            whenever(cordaNodeConnector.getFlowOutcomeForClientId<TestFlowResult>(any())).thenReturn(unfinishedFuture)
 
             val result = flowStarterController.getFlowOutcomeForClientId(testClientId)
 
@@ -93,10 +93,10 @@ class FlowStarterControllerSpec {
 
         @Test
         fun `should return RpcFlowOutcomeResponse with status FAILED when CordaNodeConnector returns exceptionally finished future`() {
-            val failedFuture = openFuture<FlowResult>().toCompletableFuture()
+            val failedFuture = openFuture<TestFlowResult>().toCompletableFuture()
             val exceptionMessage = "Something went wrong in the flow"
             failedFuture.completeExceptionally(RuntimeException(exceptionMessage))
-            whenever(cordaNodeConnector.getFlowOutcomeForClientId<FlowResult>(any())).thenReturn(failedFuture)
+            whenever(cordaNodeConnector.getFlowOutcomeForClientId<TestFlowResult>(any())).thenReturn(failedFuture)
 
             val result = flowStarterController.getFlowOutcomeForClientId(testClientId)
 
@@ -114,7 +114,7 @@ class FlowStarterControllerSpec {
 
         @Test
         fun `should return RpcFlowOutcomeResponse with status COMPLETED when CordaNodeConnector returns finished future`() {
-            whenever(cordaNodeConnector.getFlowOutcomeForClientId<FlowResult>(any()))
+            whenever(cordaNodeConnector.getFlowOutcomeForClientId<TestFlowResult>(any()))
                 .thenReturn(doneFuture(testReturnValue).toCompletableFuture())
 
             val result = flowStarterController.getFlowOutcomeForClientId(testClientId)
