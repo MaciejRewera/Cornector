@@ -3,9 +3,9 @@ package com.rewera.routing
 import com.rewera.models.api.*
 import com.rewera.modules.Jackson
 import com.rewera.testdata.TestData
-import com.rewera.testdata.TestData.FlowResult
-import com.rewera.testdata.TestData.clientId
+import com.rewera.testdata.TestData.TestFlowResult
 import com.rewera.testdata.TestData.flowHandleWithClientId
+import com.rewera.testdata.TestData.testClientId
 import io.kotest.matchers.shouldBe
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
@@ -50,7 +50,7 @@ class FlowStarterRoutesIntegrationTest : MockedCordaRpcConnectionIntegrationTest
         fun `should return NotFound when NO flow for clientid found`() = testApplicationWithMockedRpcConnection {
             whenever(rpcOps.reattachFlowWithClientId<Any>(any())).thenReturn(null)
 
-            val response = client.get("/api/v1/flowstarter/flowoutcomeforclientid/$clientId")
+            val response = client.get("/api/v1/flowstarter/flowoutcomeforclientid/$testClientId")
 
             response.status shouldBe HttpStatusCode.NotFound
             response.bodyAsText() shouldBe ""
@@ -59,11 +59,11 @@ class FlowStarterRoutesIntegrationTest : MockedCordaRpcConnectionIntegrationTest
         @Test
         fun `should return the value from CordaRPCOps when flow for clientid has been found`() =
             testApplicationWithMockedRpcConnection {
-                val testFlowResult = FlowResult("Test value", 1234567)
-                whenever(rpcOps.reattachFlowWithClientId<FlowResult>(any()))
-                    .thenReturn(flowHandleWithClientId(clientId, testFlowResult))
+                val testFlowResult = TestFlowResult("Test value", 1234567)
+                whenever(rpcOps.reattachFlowWithClientId<TestFlowResult>(any()))
+                    .thenReturn(flowHandleWithClientId(testClientId, testFlowResult))
 
-                val response = client.get("/api/v1/flowstarter/flowoutcomeforclientid/$clientId")
+                val response = client.get("/api/v1/flowstarter/flowoutcomeforclientid/$testClientId")
 
                 response.status shouldBe HttpStatusCode.OK
                 response.bodyAsText() shouldBe
@@ -86,13 +86,13 @@ class FlowStarterRoutesIntegrationTest : MockedCordaRpcConnectionIntegrationTest
 
         @Test
         fun `should return RpcStartFlowResponse in JSON format`() = testApplicationWithMockedRpcConnection {
-            val testFlowResult = FlowResult("Test value", 1234567)
-            val flowHandle = flowHandleWithClientId(clientId, testFlowResult)
-            whenever(rpcOps.startFlowDynamicWithClientId<FlowResult>(any(), any(), any())).thenReturn(flowHandle)
+            val testFlowResult = TestFlowResult("Test value", 1234567)
+            val flowHandle = flowHandleWithClientId(testClientId, testFlowResult)
+            whenever(rpcOps.startFlowDynamicWithClientId<TestFlowResult>(any(), any(), any())).thenReturn(flowHandle)
 
             val client = createClient { install(ContentNegotiation) { jackson() } }
             val requestBody = RpcStartFlowRequest(
-                clientId,
+                testClientId,
                 TestData.SingleParameterTestFlow::class.java.name,
                 RpcStartFlowRequestParameters("""{"someParameter":"Test value"}""")
             )
@@ -103,12 +103,12 @@ class FlowStarterRoutesIntegrationTest : MockedCordaRpcConnectionIntegrationTest
             }
 
             response.status shouldBe HttpStatusCode.OK
-            response.bodyAsText() shouldBe """{"clientId":"$clientId","flowId":{"uuid":"${flowHandle.id.uuid}"}}"""
+            response.bodyAsText() shouldBe """{"clientId":"$testClientId","flowId":{"uuid":"${flowHandle.id.uuid}"}}"""
 
             Jackson.mapper.readValue(
                 response.bodyAsText(),
                 RpcStartFlowResponse::class.java
-            ) shouldBe RpcStartFlowResponse(clientId = clientId, flowId = FlowId(flowHandle.id.uuid))
+            ) shouldBe RpcStartFlowResponse(clientId = testClientId, flowId = FlowId(flowHandle.id.uuid))
         }
     }
 }
