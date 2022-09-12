@@ -9,13 +9,16 @@ import java.util.*
 
 object TestData {
 
-    const val clientId = "test-client-id"
+    const val testClientId = "test-client-id"
 
-    data class FlowResult(val value1: String, val value2: Int)
+    fun randomUuid(): UUID = UUID.randomUUID()
+    fun randomUuidString(): String = randomUuid().toString()
 
-    fun flowHandleWithClientId(clientId: String, returnValue: FlowResult) = object : FlowHandleWithClientId<FlowResult> {
+    data class TestFlowResult(val value1: String, val value2: Int)
+
+    fun flowHandleWithClientId(clientId: String, returnValue: TestFlowResult) = object : FlowHandleWithClientId<TestFlowResult> {
         override val clientId: String = clientId
-        override val returnValue: CordaFuture<FlowResult> = doneFuture(returnValue)
+        override val returnValue: CordaFuture<TestFlowResult> = doneFuture(returnValue)
         override val id: StateMachineRunId = StateMachineRunId(UUID.randomUUID())
         override fun close() {}
     }

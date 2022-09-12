@@ -1,7 +1,7 @@
 package com.rewera.connectors
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.rewera.models.RpcStartFlowRequestParameters
+import com.rewera.models.api.RpcStartFlowRequestParameters
 import com.rewera.modules.Jackson
 import net.corda.core.flows.FlowLogic
 import kotlin.reflect.KParameter

@@ -1,7 +1,7 @@
 package com.rewera.connectors
 
 import com.fasterxml.jackson.core.JsonParseException
-import com.rewera.models.RpcStartFlowRequestParameters
+import com.rewera.models.api.RpcStartFlowRequestParameters
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldInclude

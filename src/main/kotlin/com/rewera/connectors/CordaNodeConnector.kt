@@ -2,9 +2,9 @@ package com.rewera.connectors
 
 import com.google.inject.Inject
 import com.google.inject.Singleton
-import com.rewera.models.FlowId
-import com.rewera.models.RpcStartFlowRequestParameters
-import com.rewera.models.RpcStartFlowResponse
+import com.rewera.models.api.FlowId
+import com.rewera.models.api.RpcStartFlowRequestParameters
+import com.rewera.models.api.RpcStartFlowResponse
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.StateMachineRunId
 import java.util.*

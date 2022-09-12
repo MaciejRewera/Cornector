@@ -3,7 +3,7 @@ package com.rewera.plugins
 import com.rewera.controllers.ControllersRegistry
 import com.rewera.controllers.FlowManagerController
 import com.rewera.controllers.FlowStarterController
-import com.rewera.models.RpcStartFlowRequest
+import com.rewera.models.api.RpcStartFlowRequest
 import com.rewera.modules.Jackson.configure
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*

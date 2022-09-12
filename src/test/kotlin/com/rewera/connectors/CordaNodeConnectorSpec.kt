@@ -1,9 +1,9 @@
 package com.rewera.connectors
 
-import com.rewera.models.RpcStartFlowRequestParameters
-import com.rewera.testdata.TestData.FlowResult
-import com.rewera.testdata.TestData.clientId
+import com.rewera.models.api.RpcStartFlowRequestParameters
+import com.rewera.testdata.TestData.TestFlowResult
 import com.rewera.testdata.TestData.flowHandleWithClientId
+import com.rewera.testdata.TestData.testClientId
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.future.await
@@ -67,24 +67,24 @@ class CordaNodeConnectorSpec {
     @DisplayName("CordaNodeConnector on getFlowOutcomeForClientId")
     inner class GetFlowOutcomeForClientIdSpec {
 
-        private val testReturnValue = FlowResult("Test value", 1234567)
+        private val testReturnValue = TestFlowResult("Test value", 1234567)
 
         @Test
         suspend fun `should call CordaRPCOps`() {
-            whenever(rpcOps.reattachFlowWithClientId<FlowResult>(any()))
-                .thenReturn(flowHandleWithClientId(clientId, testReturnValue))
+            whenever(rpcOps.reattachFlowWithClientId<TestFlowResult>(any()))
+                .thenReturn(flowHandleWithClientId(testClientId, testReturnValue))
 
-            cordaNodeConnector.getFlowOutcomeForClientId<FlowResult>(clientId)!!.await()
+            cordaNodeConnector.getFlowOutcomeForClientId<TestFlowResult>(testClientId)!!.await()
 
-            verify(rpcOps).reattachFlowWithClientId<FlowResult>(eq(clientId))
+            verify(rpcOps).reattachFlowWithClientId<TestFlowResult>(eq(testClientId))
         }
 
         @Test
         suspend fun `should return Future with value returned by CordaRPCOps`() {
-            whenever(rpcOps.reattachFlowWithClientId<FlowResult>(any()))
-                .thenReturn(flowHandleWithClientId(clientId, testReturnValue))
+            whenever(rpcOps.reattachFlowWithClientId<TestFlowResult>(any()))
+                .thenReturn(flowHandleWithClientId(testClientId, testReturnValue))
 
-            val result = cordaNodeConnector.getFlowOutcomeForClientId<FlowResult>(clientId)!!.await()
+            val result = cordaNodeConnector.getFlowOutcomeForClientId<TestFlowResult>(testClientId)!!.await()
 
             result shouldBe testReturnValue
         }
@@ -101,17 +101,17 @@ class CordaNodeConnectorSpec {
         private val flowName = "com.rewera.connectors.CordaNodeConnectorSpec\$StartFlowSpec\$SingleParameterTestFlow"
         private val flowIdValue = UUID.randomUUID()
         private val flowHandle =
-            FlowHandleWithClientIdImpl(StateMachineRunId(flowIdValue), doneFuture("Result"), clientId)
+            FlowHandleWithClientIdImpl(StateMachineRunId(flowIdValue), doneFuture("Result"), testClientId)
         private val flowParams = RpcStartFlowRequestParameters("This should be a JSON")
 
         @Test
         fun `should call CordaRPCOps`() {
             whenever(rpcOps.startFlowDynamicWithClientId<String>(any(), any(), any())).thenReturn(flowHandle)
 
-            cordaNodeConnector.startFlow(clientId, flowName, flowParams)
+            cordaNodeConnector.startFlow(testClientId, flowName, flowParams)
 
             verify(rpcOps).startFlowDynamicWithClientId(
-                eq(clientId),
+                eq(testClientId),
                 eq(SingleParameterTestFlow::class.java),
                 eq(flowParams.parametersInJson)
             )
@@ -121,9 +121,9 @@ class CordaNodeConnectorSpec {
         fun `should return RpcStartFlowResponse with flowId returned from CordaRPCOps`() {
             whenever(rpcOps.startFlowDynamicWithClientId<String>(any(), any(), any())).thenReturn(flowHandle)
 
-            val result = cordaNodeConnector.startFlow(clientId, flowName, flowParams)
+            val result = cordaNodeConnector.startFlow(testClientId, flowName, flowParams)
 
-            result.clientId shouldBe clientId
+            result.clientId shouldBe testClientId
             result.flowId.uuid shouldBe flowIdValue
         }
 
@@ -132,7 +132,7 @@ class CordaNodeConnectorSpec {
             whenever(rpcOps.startFlowDynamicWithClientId<String>(any(), any(), any())).thenReturn(flowHandle)
 
             val exc = shouldThrow<ClassNotFoundException> {
-                cordaNodeConnector.startFlow(clientId, "this.is.not.a.valid.class.name", flowParams)
+                cordaNodeConnector.startFlow(testClientId, "this.is.not.a.valid.class.name", flowParams)
             }
             exc.message shouldBe "this.is.not.a.valid.class.name"
         }
@@ -141,9 +141,9 @@ class CordaNodeConnectorSpec {
         fun `when provided with class name that does not inherit FlowLogic should should call CordaRPCOps`() {
             whenever(rpcOps.startFlowDynamicWithClientId<String>(any(), any(), any())).thenReturn(flowHandle)
 
-            cordaNodeConnector.startFlow(clientId, String::class.java.name, flowParams)
+            cordaNodeConnector.startFlow(testClientId, String::class.java.name, flowParams)
 
-            verify(rpcOps).startFlowDynamicWithClientId<String>(eq(clientId), any(), eq(flowParams.parametersInJson))
+            verify(rpcOps).startFlowDynamicWithClientId<String>(eq(testClientId), any(), eq(flowParams.parametersInJson))
         }
     }
 
@@ -170,7 +170,7 @@ class CordaNodeConnectorSpec {
         private val flowIdValue = UUID.randomUUID()
         private val someParameterValue = "Test param value"
         private val flowHandle =
-            FlowHandleWithClientIdImpl(StateMachineRunId(flowIdValue), doneFuture("Result"), clientId)
+            FlowHandleWithClientIdImpl(StateMachineRunId(flowIdValue), doneFuture("Result"), testClientId)
         private val flowParams = RpcStartFlowRequestParameters("{\"someParameter\":\"$someParameterValue\"}")
 
         @Test
@@ -178,10 +178,10 @@ class CordaNodeConnectorSpec {
             whenever(rpcOps.startFlowDynamicWithClientId<String>(any(), any(), any())).thenReturn(flowHandle)
             whenever(parametersExtractor.extractParameters<Any>(any(), any())).thenReturn(listOf(someParameterValue))
 
-            cordaNodeConnector.startFlowTyped(clientId, singleParameterFlowName, flowParams)
+            cordaNodeConnector.startFlowTyped(testClientId, singleParameterFlowName, flowParams)
 
             verify(rpcOps).startFlowDynamicWithClientId(
-                eq(clientId),
+                eq(testClientId),
                 eq(SingleParameterTestFlow::class.java),
                 eq(someParameterValue)
             )
@@ -192,9 +192,9 @@ class CordaNodeConnectorSpec {
             whenever(rpcOps.startFlowDynamicWithClientId<String>(any(), any(), any())).thenReturn(flowHandle)
             whenever(parametersExtractor.extractParameters<Any>(any(), any())).thenReturn(listOf(someParameterValue))
 
-            val result = cordaNodeConnector.startFlowTyped(clientId, singleParameterFlowName, flowParams)
+            val result = cordaNodeConnector.startFlowTyped(testClientId, singleParameterFlowName, flowParams)
 
-            result.clientId shouldBe clientId
+            result.clientId shouldBe testClientId
             result.flowId.uuid shouldBe flowIdValue
         }
 
@@ -203,7 +203,7 @@ class CordaNodeConnectorSpec {
             whenever(rpcOps.startFlowDynamicWithClientId<String>(any(), any(), any())).thenReturn(flowHandle)
 
             val exc = shouldThrow<ClassNotFoundException> {
-                cordaNodeConnector.startFlowTyped(clientId, "this.is.not.a.valid.class.name", flowParams)
+                cordaNodeConnector.startFlowTyped(testClientId, "this.is.not.a.valid.class.name", flowParams)
             }
             exc.message shouldBe "this.is.not.a.valid.class.name"
         }
@@ -213,9 +213,9 @@ class CordaNodeConnectorSpec {
             whenever(rpcOps.startFlowDynamicWithClientId<String>(any(), any(), any())).thenReturn(flowHandle)
             whenever(parametersExtractor.extractParameters<Any>(any(), any())).thenReturn(listOf(someParameterValue))
 
-            cordaNodeConnector.startFlowTyped(clientId, String::class.java.name, flowParams)
+            cordaNodeConnector.startFlowTyped(testClientId, String::class.java.name, flowParams)
 
-            verify(rpcOps).startFlowDynamicWithClientId<String>(eq(clientId), any(), eq(someParameterValue))
+            verify(rpcOps).startFlowDynamicWithClientId<String>(eq(testClientId), any(), eq(someParameterValue))
         }
 
         @Test
@@ -228,11 +228,11 @@ class CordaNodeConnectorSpec {
                 "{\"firstParameter\":\"Test value 1\", \"secondParameter\":1234567, \"thirdParameter\":\"Test value 3\"}"
             )
 
-            cordaNodeConnector.startFlowTyped(clientId, multipleParametersFlowName, multipleFlowParams)
+            cordaNodeConnector.startFlowTyped(testClientId, multipleParametersFlowName, multipleFlowParams)
 
             val expectedVararg = paramExtractorReturnedValues.toTypedArray()
             verify(rpcOps).startFlowDynamicWithClientId(
-                clientId,
+                testClientId,
                 MultipleParametersTestFlow::class.java,
                 *expectedVararg
             )
