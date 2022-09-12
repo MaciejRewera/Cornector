@@ -49,6 +49,8 @@ class FlowResultsRepository {
     fun <A> insert(flowResult: FlowResult<A>): InsertOneResult =
         collection.insertOne(Jackson.mapper.writeValueAsString(flowResult))
 
+    fun insertClientId(clientId: String): InsertOneResult = insert(FlowResult<Any>(clientId = clientId))
+
     fun findAll(): List<FlowResult<*>> = collection.find().toList()
 
     fun findByFlowId(flowId: UUID): FlowResult<*>? = collection.findOne(FlowResult<*>::flowId eq flowId.toString())

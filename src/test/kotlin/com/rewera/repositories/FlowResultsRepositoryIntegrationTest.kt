@@ -115,6 +115,30 @@ class FlowResultsRepositoryIntegrationTest {
     }
 
     @Nested
+    @DisplayName("FlowResultsRepository on insertClientId")
+    inner class InsertClientIdTest {
+
+        @Test
+        fun `should insert document with clientId and status fields only into Mongo`() {
+            repository.insertClientId(testClientId)
+
+            val allResults = repository.findAll()
+
+            val expectedFlowResult = FlowResult<Any>(clientId = testClientId, status = FlowStatus.RUNNING)
+            allResults.size shouldBe 1
+            allResults.first() shouldBe expectedFlowResult
+        }
+
+        @Test
+        fun `when provided with the same clientId twice should throw an exception`() {
+            repository.insertClientId(testClientId)
+
+            val exc = shouldThrow<MongoWriteException> { repository.insertClientId(testClientId) }
+            exc.message shouldInclude "WriteError{code=11000, message='E11000 duplicate key error collection: cornector.FlowResults index: clientId_1 dup key"
+        }
+    }
+
+    @Nested
     @DisplayName("FlowResultsRepository on findByFlowId")
     inner class FindByFlowIdTest {
 
