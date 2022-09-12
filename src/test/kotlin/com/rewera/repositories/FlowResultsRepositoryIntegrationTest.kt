@@ -120,7 +120,7 @@ class FlowResultsRepositoryIntegrationTest {
 
         @Test
         fun `should insert document with clientId and status fields only into Mongo`() {
-            repository.insertClientId(testClientId)
+            repository.insertWithClientId(testClientId)
 
             val allResults = repository.findAll()
 
@@ -131,9 +131,9 @@ class FlowResultsRepositoryIntegrationTest {
 
         @Test
         fun `when provided with the same clientId twice should throw an exception`() {
-            repository.insertClientId(testClientId)
+            repository.insertWithClientId(testClientId)
 
-            val exc = shouldThrow<MongoWriteException> { repository.insertClientId(testClientId) }
+            val exc = shouldThrow<MongoWriteException> { repository.insertWithClientId(testClientId) }
             exc.message shouldInclude "WriteError{code=11000, message='E11000 duplicate key error collection: cornector.FlowResults index: clientId_1 dup key"
         }
     }
