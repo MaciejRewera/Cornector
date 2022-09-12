@@ -350,6 +350,169 @@ class FlowResultsRepositoryIntegrationTest {
             result shouldExist { it.clientId == "clientId-1" }
             result shouldExist { it.clientId == "clientId-4" }
         }
+    }
 
+    @Nested
+    @DisplayName("FlowResultsRepository on updateFlowId")
+    inner class UpdateFlowIdTest {
+
+        @Test
+        fun `when there is NO FlowResult in the DB should NOT make any changes`() {
+            val result = repository.updateFlowId(testClientId, randomUuid())
+
+            result.matchedCount shouldBe 0L
+            result.modifiedCount shouldBe 0L
+
+            repository.findAll().size shouldBe 0
+        }
+
+        @Test
+        fun `when there is NO FlowResult in the DB should NOT upsert new FlowResult`() {
+            repository.updateFlowId(testClientId, randomUuid()).upsertedId shouldBe null
+        }
+
+        @Test
+        fun `when there is FlowResult with different clientId in the DB should NOT make any changes`() {
+            val flowResult = FlowResult<Any>(clientId = "clientId-1")
+            repository.insert(flowResult)
+
+            val result = repository.updateFlowId("clientId-2", randomUuid())
+
+            result.matchedCount shouldBe 0L
+            result.modifiedCount shouldBe 0L
+
+            val flowResultsInDb = repository.findAll()
+            flowResultsInDb.size shouldBe 1
+            flowResultsInDb.first() shouldBe flowResult
+        }
+
+        @Test
+        fun `when there is FlowResult with different clientId in the DB should NOT upsert new FlowResult`() {
+            repository.insert(FlowResult<Any>(clientId = "clientId-1"))
+
+            repository.updateFlowId("clientId-2", randomUuid()).upsertedId shouldBe null
+        }
+
+        @Test
+        fun `when there is FlowResult with given clientId in the DB should update only flowId in this FlowResult`() {
+            val flowResult = FlowResult<Any>(clientId = testClientId)
+            repository.insert(flowResult)
+            val flowId = randomUuid()
+
+            val result = repository.updateFlowId(testClientId, flowId)
+
+            result.matchedCount shouldBe 1L
+            result.modifiedCount shouldBe 1L
+
+            val flowResultsInDb = repository.findAll()
+            val expectedFlowResult = flowResult.copy(flowId = flowId.toString())
+            flowResultsInDb.size shouldBe 1
+            flowResultsInDb.first() shouldBe expectedFlowResult
+        }
+
+        @Test
+        fun `when there are multiple FlowResults in the DB should update only FlowResult with given clientId`() {
+            val clientId = "clientId-1"
+            val flowResult = FlowResult<Any>(clientId)
+            val flowResults = listOf(
+                flowResult,
+                flowResult.copy(clientId = "clientId-2"),
+                flowResult.copy(clientId = "clientId-3")
+            )
+            flowResults.forEach { repository.insert(it) }
+            val flowId = randomUuid()
+
+            val result = repository.updateFlowId(clientId, flowId)
+
+            result.matchedCount shouldBe 1L
+            result.modifiedCount shouldBe 1L
+
+            val updatedFlowResultsInDb = repository.findAll().filter { it.clientId == clientId }
+            val expectedFlowResult = flowResult.copy(flowId = flowId.toString())
+            updatedFlowResultsInDb.size shouldBe 1
+            updatedFlowResultsInDb.first() shouldBe expectedFlowResult
+        }
+    }
+
+    @Nested
+    @DisplayName("FlowResultsRepository on update")
+    inner class UpdateStatusAndResultTest {
+
+        @Test
+        fun `when there is NO FlowResult in the DB should NOT make any changes`() {
+            val result = repository.update(testClientId, FlowStatus.COMPLETED, "Some flow result")
+
+            result.matchedCount shouldBe 0L
+            result.modifiedCount shouldBe 0L
+
+            repository.findAll().size shouldBe 0
+        }
+
+        @Test
+        fun `when there is NO FlowResult in the DB should NOT upsert new FlowResult`() {
+            repository.update(testClientId, FlowStatus.COMPLETED, "Some flow result").upsertedId shouldBe null
+        }
+
+        @Test
+        fun `when there is FlowResult with different clientId in the DB should NOT make any changes`() {
+            val flowResult = FlowResult<Any>(clientId = "clientId-1")
+            repository.insert(flowResult)
+
+            val result = repository.update("clientId-2", FlowStatus.COMPLETED, "Some flow result")
+
+            result.matchedCount shouldBe 0L
+            result.modifiedCount shouldBe 0L
+
+            val flowResultsInDb = repository.findAll()
+            flowResultsInDb.size shouldBe 1
+            flowResultsInDb.first() shouldBe flowResult
+        }
+
+        @Test
+        fun `when there is FlowResult with different clientId in the DB should NOT upsert new FlowResult`() {
+            repository.insert(FlowResult<Any>(clientId = "clientId-1"))
+
+            repository.update("clientId-2", FlowStatus.COMPLETED, "Some flow result").upsertedId shouldBe null
+        }
+
+        @Test
+        fun `when there is FlowResult with given clientId in the DB should update only flowId in this FlowResult`() {
+            val flowResult = FlowResult<Any>(clientId = testClientId)
+            repository.insert(flowResult)
+            val flowResultValue = "Some flow result"
+
+            val result = repository.update(testClientId, FlowStatus.COMPLETED, flowResultValue)
+
+            result.matchedCount shouldBe 1L
+            result.modifiedCount shouldBe 1L
+
+            val flowResultsInDb = repository.findAll()
+            val expectedFlowResult = flowResult.copy(status = FlowStatus.COMPLETED, result = flowResultValue)
+            flowResultsInDb.size shouldBe 1
+            flowResultsInDb.first() shouldBe expectedFlowResult
+        }
+
+        @Test
+        fun `when there are multiple FlowResults in the DB should update only FlowResult with given clientId`() {
+            val clientId = "clientId-1"
+            val flowResult = FlowResult<Any>(clientId)
+            val flowResults = listOf(
+                flowResult,
+                flowResult.copy(clientId = "clientId-2"),
+                flowResult.copy(clientId = "clientId-3")
+            )
+            flowResults.forEach { repository.insert(it) }
+            val flowResultValue = "Some flow result"
+
+            val result = repository.update(clientId, FlowStatus.COMPLETED, flowResultValue)
+
+            result.matchedCount shouldBe 1L
+            result.modifiedCount shouldBe 1L
+
+            val updatedFlowResultsInDb = repository.findAll().filter { it.clientId == clientId }
+            val expectedFlowResult = flowResult.copy(status = FlowStatus.COMPLETED, result = flowResultValue)
+            updatedFlowResultsInDb.size shouldBe 1
+            updatedFlowResultsInDb.first() shouldBe expectedFlowResult
+        }
     }
 }
