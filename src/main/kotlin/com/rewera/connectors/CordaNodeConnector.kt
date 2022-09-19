@@ -13,7 +13,8 @@ import java.util.concurrent.CompletableFuture
 @Singleton
 class CordaNodeConnector @Inject constructor(
     private val cordaRpcOpsFactory: CordaRpcOpsFactory,
-    private val parametersExtractor: FlowClassConstructorParametersExtractor
+    private val parametersExtractor: FlowClassConstructorParametersExtractor,
+    private val flowClassBuilder: FlowClassBuilder
 ) {
 
     fun getRegisteredFlows(): List<String> = cordaRpcOpsFactory.rpcOps.registeredFlows()
@@ -27,7 +28,7 @@ class CordaNodeConnector @Inject constructor(
         flowName: String,
         flowParameters: RpcStartFlowRequestParameters
     ): RpcStartFlowResponse {
-        val flowClass: Class<out FlowLogic<*>> = buildClassFrom(flowName)
+        val flowClass: Class<out FlowLogic<*>> = flowClassBuilder.buildFlowClass(flowName)
         val flowHandle =
             cordaRpcOpsFactory.rpcOps.startFlowDynamicWithClientId(clientId, flowClass, flowParameters.parametersInJson)
 
@@ -39,7 +40,7 @@ class CordaNodeConnector @Inject constructor(
         flowName: String,
         flowParameters: RpcStartFlowRequestParameters
     ): RpcStartFlowResponse {
-        val flowClass: Class<out FlowLogic<*>> = buildClassFrom(flowName)
+        val flowClass: Class<out FlowLogic<*>> = flowClassBuilder.buildFlowClass(flowName)
         val flowParametersList = parametersExtractor.extractParameters(flowClass, flowParameters)
 
         val flowHandle =
@@ -51,8 +52,6 @@ class CordaNodeConnector @Inject constructor(
 
         return RpcStartFlowResponse(flowHandle.clientId, FlowId(flowHandle.id.uuid))
     }
-
-    private fun buildClassFrom(flowName: String) = Class.forName(flowName) as Class<out FlowLogic<*>>
 
     fun killFlow(flowId: UUID): Boolean = cordaRpcOpsFactory.rpcOps.killFlow(StateMachineRunId(flowId))
 }

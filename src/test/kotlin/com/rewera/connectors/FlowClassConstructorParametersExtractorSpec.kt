@@ -2,10 +2,12 @@ package com.rewera.connectors
 
 import com.fasterxml.jackson.core.JsonParseException
 import com.rewera.models.api.RpcStartFlowRequestParameters
+import com.rewera.testdata.TestData.MultipleParametersTestFlow
+import com.rewera.testdata.TestData.ParameterlessTestFlow
+import com.rewera.testdata.TestData.SingleParameterTestFlow
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldInclude
-import net.corda.core.flows.FlowLogic
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -18,13 +20,8 @@ class FlowClassConstructorParametersExtractorSpec {
     @DisplayName("When provided with flow that has parameterless primary constructor")
     inner class ParameterlessFlowSpec {
 
-        inner class ParameterlessTestFlow : FlowLogic<String>() {
-            override fun call(): String = "ParameterlessTestFlow result should be here."
-        }
-
         private val flowClass = ParameterlessTestFlow::class.java
-        private val flowName =
-            "com.rewera.connectors.FlowClassConstructorParametersExtractorSpec\$ParameterlessFlowSpec\$ParameterlessTestFlow"
+        private val flowName = "com.rewera.testdata.TestData\$ParameterlessTestFlow"
 
         @Test
         fun `when provided with empty Json should return empty list`() {
@@ -54,13 +51,8 @@ class FlowClassConstructorParametersExtractorSpec {
     @DisplayName("When provided with flow that has single-parameter primary constructor")
     inner class SingleParameterFlowSpec {
 
-        inner class SingleParameterTestFlow(someParameter: String) : FlowLogic<String>() {
-            override fun call(): String = "SingleParameterTestFlow result should be here."
-        }
-
         private val flowClass = SingleParameterTestFlow::class.java
-        private val flowName =
-            "com.rewera.connectors.FlowClassConstructorParametersExtractorSpec\$SingleParameterFlowSpec\$SingleParameterTestFlow"
+        private val flowName = "com.rewera.testdata.TestData\$SingleParameterTestFlow"
 
         @Test
         fun `when provided with empty Json should throw an exception`() {
@@ -110,17 +102,8 @@ class FlowClassConstructorParametersExtractorSpec {
     @DisplayName("When provided with flow that has multiple parameters in primary constructor")
     inner class MultipleParametersFlowSpec {
 
-        inner class MultipleParametersTestFlow(
-            firstParameter: String,
-            secondParameter: Int,
-            thirdParameter: String
-        ) : FlowLogic<String>() {
-            override fun call(): String = "MultipleParametersTestFlow result should be here."
-        }
-
         private val flowClass = MultipleParametersTestFlow::class.java
-        private val flowName =
-            "com.rewera.connectors.FlowClassConstructorParametersExtractorSpec\$MultipleParametersFlowSpec\$MultipleParametersTestFlow"
+        private val flowName = "com.rewera.testdata.TestData\$MultipleParametersTestFlow"
 
         @Test
         fun `when provided with empty Json should throw an exception with all missing parameters listed`() {
