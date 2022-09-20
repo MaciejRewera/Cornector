@@ -67,7 +67,11 @@ class FlowResultsRepository @Inject constructor(config: ApplicationConfig) {
         collection.updateOne(FlowResult<*>::clientId eq clientIdToFind, FlowResult<*>::flowId setTo flowId.toString())
 
     fun <A> update(clientIdToFind: String, status: FlowStatus, result: A): UpdateResult = collection.updateOne(
-        FlowResult<*>::clientId eq clientIdToFind,
+        and(
+            FlowResult<A>::clientId eq clientIdToFind,
+            FlowResult<A>::result eq null,
+            FlowResult<A>::status eq FlowStatus.RUNNING
+        ),
         set(FlowResult<A>::status setTo status, FlowResult<A>::result setTo result)
     )
 }

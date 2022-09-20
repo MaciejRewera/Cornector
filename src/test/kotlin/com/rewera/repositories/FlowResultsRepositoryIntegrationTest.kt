@@ -463,6 +463,8 @@ class FlowResultsRepositoryIntegrationTest {
         @Test
         fun `when there is NO FlowResult in the DB should NOT upsert new FlowResult`() {
             repository.update(testClientId, FlowStatus.COMPLETED, "Some flow result").upsertedId shouldBe null
+
+            repository.findAll().size shouldBe 0
         }
 
         @Test
@@ -482,13 +484,72 @@ class FlowResultsRepositoryIntegrationTest {
 
         @Test
         fun `when there is FlowResult with different clientId in the DB should NOT upsert new FlowResult`() {
-            repository.insert(FlowResult<Any>(clientId = "clientId-1"))
+            val flowResult = FlowResult<Any>(clientId = "clientId-1")
+            repository.insert(flowResult)
 
             repository.update("clientId-2", FlowStatus.COMPLETED, "Some flow result").upsertedId shouldBe null
+
+            val flowResultsInDb = repository.findAll()
+            flowResultsInDb.size shouldBe 1
+            flowResultsInDb.first() shouldBe flowResult
         }
 
         @Test
-        fun `when there is FlowResult with given clientId in the DB should update only flowId in this FlowResult`() {
+        fun `when there is FlowResult with given clientId but non-null result in the DB should NOT make any changes`() {
+            val flowResult = FlowResult(clientId = testClientId, result = "Some flow result")
+            repository.insert(flowResult)
+
+            val result = repository.update(testClientId, FlowStatus.COMPLETED, "Some flow result")
+
+            result.matchedCount shouldBe 0L
+            result.modifiedCount shouldBe 0L
+
+            val flowResultsInDb = repository.findAll()
+            flowResultsInDb.size shouldBe 1
+            flowResultsInDb.first() shouldBe flowResult
+        }
+
+        @Test
+        fun `when there is FlowResult with given clientId but non-null result in the DB should NOT upsert new FlowResult`() {
+            val flowResult = FlowResult(clientId = testClientId, result = "Some flow result")
+            repository.insert(flowResult)
+
+            repository.update("clientId-2", FlowStatus.COMPLETED, "Some flow result").upsertedId shouldBe null
+
+            val flowResultsInDb = repository.findAll()
+            flowResultsInDb.size shouldBe 1
+            flowResultsInDb.first() shouldBe flowResult
+        }
+
+        @Test
+        fun `when there is FlowResult with given clientId but status is COMPLETED in the DB should NOT make any changes`() {
+            val flowResult = FlowResult<Any>(clientId = testClientId, status = FlowStatus.COMPLETED)
+            repository.insert(flowResult)
+
+            val result = repository.update(testClientId, FlowStatus.COMPLETED, "Some flow result")
+
+            result.matchedCount shouldBe 0L
+            result.modifiedCount shouldBe 0L
+
+            val flowResultsInDb = repository.findAll()
+            flowResultsInDb.size shouldBe 1
+            flowResultsInDb.first() shouldBe flowResult
+        }
+
+        @Test
+        fun `when there is FlowResult with given clientId but status is COMPLETED in the DB should NOT upsert new FlowResult`() {
+            val flowResult = FlowResult<Any>(clientId = testClientId, status = FlowStatus.COMPLETED)
+            repository.insert(flowResult)
+
+            repository.update("clientId-2", FlowStatus.COMPLETED, "Some flow result").upsertedId shouldBe null
+
+            val flowResultsInDb = repository.findAll()
+            flowResultsInDb.size shouldBe 1
+            flowResultsInDb.first() shouldBe flowResult
+        }
+
+        @Test
+        fun `when there is FlowResult with given clientId, null result and status RUNNING in the DB should update this FlowResult`() {
             val flowResult = FlowResult<Any>(clientId = testClientId)
             repository.insert(flowResult)
             val flowResultValue = "Some flow result"
