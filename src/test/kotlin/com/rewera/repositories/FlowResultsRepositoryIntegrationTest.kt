@@ -449,10 +449,11 @@ class FlowResultsRepositoryIntegrationTest {
     @Nested
     @DisplayName("FlowResultsRepository on update")
     inner class UpdateStatusAndResultTest {
+        private val flowId = randomUuid()
 
         @Test
         fun `when there is NO FlowResult in the DB should NOT make any changes`() {
-            val result = repository.update(testClientId, FlowStatus.COMPLETED, "Some flow result")
+            val result = repository.update(testClientId, flowId, FlowStatus.COMPLETED, "Some flow result")
 
             result.matchedCount shouldBe 0L
             result.modifiedCount shouldBe 0L
@@ -462,7 +463,7 @@ class FlowResultsRepositoryIntegrationTest {
 
         @Test
         fun `when there is NO FlowResult in the DB should NOT upsert new FlowResult`() {
-            repository.update(testClientId, FlowStatus.COMPLETED, "Some flow result").upsertedId shouldBe null
+            repository.update(testClientId, flowId, FlowStatus.COMPLETED, "Some flow result").upsertedId shouldBe null
 
             repository.findAll().size shouldBe 0
         }
@@ -472,7 +473,7 @@ class FlowResultsRepositoryIntegrationTest {
             val flowResult = FlowResult<Any>(clientId = "clientId-1")
             repository.insert(flowResult)
 
-            val result = repository.update("clientId-2", FlowStatus.COMPLETED, "Some flow result")
+            val result = repository.update("clientId-2", flowId, FlowStatus.COMPLETED, "Some flow result")
 
             result.matchedCount shouldBe 0L
             result.modifiedCount shouldBe 0L
@@ -487,7 +488,7 @@ class FlowResultsRepositoryIntegrationTest {
             val flowResult = FlowResult<Any>(clientId = "clientId-1")
             repository.insert(flowResult)
 
-            repository.update("clientId-2", FlowStatus.COMPLETED, "Some flow result").upsertedId shouldBe null
+            repository.update("clientId-2", flowId, FlowStatus.COMPLETED, "Some flow result").upsertedId shouldBe null
 
             val flowResultsInDb = repository.findAll()
             flowResultsInDb.size shouldBe 1
@@ -499,7 +500,7 @@ class FlowResultsRepositoryIntegrationTest {
             val flowResult = FlowResult(clientId = testClientId, result = "Some flow result")
             repository.insert(flowResult)
 
-            val result = repository.update(testClientId, FlowStatus.COMPLETED, "Some flow result")
+            val result = repository.update(testClientId, flowId, FlowStatus.COMPLETED, "Some flow result")
 
             result.matchedCount shouldBe 0L
             result.modifiedCount shouldBe 0L
@@ -514,7 +515,7 @@ class FlowResultsRepositoryIntegrationTest {
             val flowResult = FlowResult(clientId = testClientId, result = "Some flow result")
             repository.insert(flowResult)
 
-            repository.update("clientId-2", FlowStatus.COMPLETED, "Some flow result").upsertedId shouldBe null
+            repository.update("clientId-2", flowId, FlowStatus.COMPLETED, "Some flow result").upsertedId shouldBe null
 
             val flowResultsInDb = repository.findAll()
             flowResultsInDb.size shouldBe 1
@@ -526,7 +527,7 @@ class FlowResultsRepositoryIntegrationTest {
             val flowResult = FlowResult<Any>(clientId = testClientId, status = FlowStatus.COMPLETED)
             repository.insert(flowResult)
 
-            val result = repository.update(testClientId, FlowStatus.COMPLETED, "Some flow result")
+            val result = repository.update(testClientId, flowId, FlowStatus.COMPLETED, "Some flow result")
 
             result.matchedCount shouldBe 0L
             result.modifiedCount shouldBe 0L
@@ -541,7 +542,7 @@ class FlowResultsRepositoryIntegrationTest {
             val flowResult = FlowResult<Any>(clientId = testClientId, status = FlowStatus.COMPLETED)
             repository.insert(flowResult)
 
-            repository.update("clientId-2", FlowStatus.COMPLETED, "Some flow result").upsertedId shouldBe null
+            repository.update("clientId-2", flowId, FlowStatus.COMPLETED, "Some flow result").upsertedId shouldBe null
 
             val flowResultsInDb = repository.findAll()
             flowResultsInDb.size shouldBe 1
@@ -554,13 +555,14 @@ class FlowResultsRepositoryIntegrationTest {
             repository.insert(flowResult)
             val flowResultValue = "Some flow result"
 
-            val result = repository.update(testClientId, FlowStatus.COMPLETED, flowResultValue)
+            val result = repository.update(testClientId, flowId, FlowStatus.COMPLETED, flowResultValue)
 
             result.matchedCount shouldBe 1L
             result.modifiedCount shouldBe 1L
 
             val flowResultsInDb = repository.findAll()
-            val expectedFlowResult = flowResult.copy(status = FlowStatus.COMPLETED, result = flowResultValue)
+            val expectedFlowResult =
+                flowResult.copy(flowId = flowId.toString(), status = FlowStatus.COMPLETED, result = flowResultValue)
             flowResultsInDb.size shouldBe 1
             flowResultsInDb.first() shouldBe expectedFlowResult
         }
@@ -577,13 +579,14 @@ class FlowResultsRepositoryIntegrationTest {
             flowResults.forEach { repository.insert(it) }
             val flowResultValue = "Some flow result"
 
-            val result = repository.update(clientId, FlowStatus.COMPLETED, flowResultValue)
+            val result = repository.update(clientId, flowId, FlowStatus.COMPLETED, flowResultValue)
 
             result.matchedCount shouldBe 1L
             result.modifiedCount shouldBe 1L
 
             val updatedFlowResultsInDb = repository.findAll().filter { it.clientId == clientId }
-            val expectedFlowResult = flowResult.copy(status = FlowStatus.COMPLETED, result = flowResultValue)
+            val expectedFlowResult =
+                flowResult.copy(flowId = flowId.toString(), status = FlowStatus.COMPLETED, result = flowResultValue)
             updatedFlowResultsInDb.size shouldBe 1
             updatedFlowResultsInDb.first() shouldBe expectedFlowResult
         }

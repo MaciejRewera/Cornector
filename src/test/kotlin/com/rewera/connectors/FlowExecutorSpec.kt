@@ -89,7 +89,12 @@ class FlowExecutorSpec {
         fun `should call FlowResultsRepository update`() {
             flowExecutor.startFlow(testClientId, flowName, flowParams)
 
-            verify(flowResultsRepository).update(eq(testClientId), eq(FlowStatus.COMPLETED), eq(flowResult))
+            verify(flowResultsRepository).update(
+                eq(testClientId),
+                eq(flowIdValue),
+                eq(FlowStatus.COMPLETED),
+                eq(flowResult)
+            )
         }
 
         @Test
@@ -149,7 +154,7 @@ class FlowExecutorSpec {
                 shouldThrow<Exception> { flowExecutor.startFlow(testClientId, flowName, flowParams) }
 
                 verify(flowResultsRepository, never()).updateFlowId(any(), any())
-                verify(flowResultsRepository, never()).update<String>(any(), any(), any())
+                verify(flowResultsRepository, never()).update<String>(any(), any(), any(), any())
             }
 
             @Test
@@ -181,7 +186,7 @@ class FlowExecutorSpec {
                 shouldThrow<Exception> { flowExecutor.startFlow(testClientId, flowName, flowParams) }
 
                 verify(flowResultsRepository, never()).updateFlowId(any(), any())
-                verify(flowResultsRepository, never()).update<String>(any(), any(), any())
+                verify(flowResultsRepository, never()).update<String>(any(), any(), any(), any())
             }
 
             @Test
@@ -212,7 +217,12 @@ class FlowExecutorSpec {
 
                 shouldThrow<Exception> { flowExecutor.startFlow(testClientId, flowName, flowParams) }
 
-                verify(flowResultsRepository).update(eq(testClientId), eq(FlowStatus.COMPLETED), eq(flowResult))
+                verify(flowResultsRepository).update(
+                    eq(testClientId),
+                    eq(flowIdValue),
+                    eq(FlowStatus.COMPLETED),
+                    eq(flowResult)
+                )
             }
 
             @Test
@@ -239,7 +249,7 @@ class FlowExecutorSpec {
 
             @Test
             fun `should NOT call CordaRPCOps removeClientId`() {
-                whenever(flowResultsRepository.update<String>(any(), any(), any())).thenThrow(testException)
+                whenever(flowResultsRepository.update<String>(any(), any(), any(), any())).thenThrow(testException)
 
                 flowExecutor.startFlow(testClientId, flowName, flowParams)
 
@@ -248,7 +258,7 @@ class FlowExecutorSpec {
 
             @Test
             fun `should return RpcStartFlowResponse with flowId returned from CordaRPCOps`() {
-                whenever(flowResultsRepository.update<String>(any(), any(), any())).thenThrow(testException)
+                whenever(flowResultsRepository.update<String>(any(), any(), any(), any())).thenThrow(testException)
 
                 val result = flowExecutor.startFlow(testClientId, flowName, flowParams)
 

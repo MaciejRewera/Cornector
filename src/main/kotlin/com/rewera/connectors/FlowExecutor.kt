@@ -44,8 +44,7 @@ class FlowExecutor @Inject constructor(
 //        }
 
     private fun <A> doOnResult(flowResult: A, clientId: String, flowId: UUID) {
-//        flowResultsRepository.updateFlowId(clientId, flowId)
-        flowResultsRepository.update(clientId, FlowStatus.COMPLETED, flowResult)
+        flowResultsRepository.update(clientId, flowId, FlowStatus.COMPLETED, flowResult)
         cordaRpcOpsFactory.rpcOps.removeClientId(clientId)
     }
 
