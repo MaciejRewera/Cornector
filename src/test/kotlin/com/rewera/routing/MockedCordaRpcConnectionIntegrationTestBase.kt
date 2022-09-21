@@ -1,34 +1,29 @@
 package com.rewera.routing
 
 import com.google.inject.Guice
-import com.google.inject.Inject
 import com.google.inject.Injector
-import com.rewera.connectors.CordaRpcOpsFactory
-import com.rewera.instance
+import com.rewera.controllers.ControllersRegistry
+import com.rewera.controllers.FlowManagerController
+import com.rewera.controllers.FlowStarterController
 import com.rewera.plugins.configureRouting
 import io.ktor.server.application.*
 import io.ktor.server.config.*
 import io.ktor.server.testing.*
-import net.corda.core.messaging.CordaRPCOps
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.mockito.Mockito
 import org.mockito.kotlin.reset
-import org.mockito.kotlin.whenever
 
 abstract class MockedCordaRpcConnectionIntegrationTestBase {
 
-    protected val rpcOps = Mockito.mock(CordaRPCOps::class.java)
+    protected val flowStarterController: FlowStarterController = Mockito.mock(FlowStarterController::class.java)
+    protected val flowManagerController: FlowManagerController = Mockito.mock(FlowManagerController::class.java)
 
-    private val testInjector: Injector = Guice.createInjector(ConnectorsMockModule())
-
-    @Inject
-    private lateinit var cordaRpcOpsFactory: CordaRpcOpsFactory
+    private val testInjector: Injector = Guice.createInjector()
 
     @BeforeEach
-    fun resetCornectorRpcOps() {
-        reset(cordaRpcOpsFactory, rpcOps)
-        whenever(cordaRpcOpsFactory.rpcOps).thenReturn(rpcOps)
+    fun resetControllers() {
+        reset(flowStarterController, flowManagerController)
     }
 
     @BeforeAll
@@ -37,7 +32,7 @@ abstract class MockedCordaRpcConnectionIntegrationTestBase {
         testInjector.injectMembers(this)
     }
 
-    fun testApplicationWithMockedRpcConnection(
+    fun testApplicationRoutesOnly(
         block: suspend ApplicationTestBuilder.() -> Unit
     ) = testApplication {
         setupTestModules()
@@ -52,6 +47,6 @@ abstract class MockedCordaRpcConnectionIntegrationTestBase {
     }
 
     private fun Application.testModule() {
-        configureRouting(testInjector.instance())
+        configureRouting(ControllersRegistry(flowStarterController, flowManagerController))
     }
 }

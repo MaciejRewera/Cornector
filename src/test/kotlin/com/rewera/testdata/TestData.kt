@@ -20,7 +20,7 @@ object TestData {
         object : FlowHandleWithClientId<TestFlowResult> {
             override val clientId: String = clientId
             override val returnValue: CordaFuture<TestFlowResult> = doneFuture(returnValue)
-            override val id: StateMachineRunId = StateMachineRunId(UUID.randomUUID())
+            override val id: StateMachineRunId = StateMachineRunId(randomUuid())
             override fun close() {}
         }
 
