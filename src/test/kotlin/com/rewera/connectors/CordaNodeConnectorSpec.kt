@@ -24,9 +24,9 @@ import java.util.*
 class CordaNodeConnectorSpec {
 
     private val cordaRpcOpsFactory = Mockito.mock(CordaRpcOpsFactory::class.java)
+    private val rpcOps = Mockito.mock(CordaRPCOps::class.java)
     private val parametersExtractor = Mockito.mock(FlowClassConstructorParametersExtractor::class.java)
     private val flowClassBuilder = Mockito.mock(FlowClassBuilder::class.java)
-    private val rpcOps = Mockito.mock(CordaRPCOps::class.java)
 
     private val cordaNodeConnector =
         CordaNodeConnector(cordaRpcOpsFactory, parametersExtractor, flowClassBuilder)
@@ -94,62 +94,6 @@ class CordaNodeConnectorSpec {
     }
 
     @Nested
-    @DisplayName("CordaNodeConnector on startFlow")
-    inner class StartFlowSpec {
-
-        private val flowName = "com.rewera.testdata.TestData\$SingleParameterTestFlow"
-        private val flowIdValue = UUID.randomUUID()
-        private val flowHandle =
-            FlowHandleWithClientIdImpl(StateMachineRunId(flowIdValue), doneFuture("Result"), testClientId)
-        private val flowParams = RpcStartFlowRequestParameters("This should be a JSON")
-
-        @Test
-        fun `should call FlowClassBuilder`() {
-            whenever(flowClassBuilder.buildFlowClass(any())).thenReturn(SingleParameterTestFlow::class.java)
-            whenever(rpcOps.startFlowDynamicWithClientId<String>(any(), any(), any())).thenReturn(flowHandle)
-
-            cordaNodeConnector.startFlow(testClientId, flowName, flowParams)
-
-            verify(flowClassBuilder).buildFlowClass(eq(flowName))
-        }
-
-        @Test
-        fun `should call CordaRPCOps`() {
-            whenever(flowClassBuilder.buildFlowClass(any())).thenReturn(SingleParameterTestFlow::class.java)
-            whenever(rpcOps.startFlowDynamicWithClientId<String>(any(), any(), any())).thenReturn(flowHandle)
-
-            cordaNodeConnector.startFlow(testClientId, flowName, flowParams)
-
-            verify(rpcOps).startFlowDynamicWithClientId(
-                eq(testClientId),
-                eq(SingleParameterTestFlow::class.java),
-                eq(flowParams.parametersInJson)
-            )
-        }
-
-        @Test
-        fun `should return RpcStartFlowResponse with flowId returned from CordaRPCOps`() {
-            whenever(flowClassBuilder.buildFlowClass(any())).thenReturn(SingleParameterTestFlow::class.java)
-            whenever(rpcOps.startFlowDynamicWithClientId<String>(any(), any(), any())).thenReturn(flowHandle)
-
-            val result = cordaNodeConnector.startFlow(testClientId, flowName, flowParams)
-
-            result.clientId shouldBe testClientId
-            result.flowId.uuid shouldBe flowIdValue
-        }
-
-        @Test
-        fun `when FlowClassBuilder throws ClassNotFoundException should throw the same exception`() {
-            whenever(flowClassBuilder.buildFlowClass(any())).thenThrow(RuntimeException("Test Exception"))
-
-            val exc = shouldThrow<RuntimeException> {
-                cordaNodeConnector.startFlow(testClientId, "invalid.class.name.but.it.does.not.matter.here", flowParams)
-            }
-            exc.message shouldBe "Test Exception"
-        }
-    }
-
-    @Nested
     @DisplayName("CordaNodeConnector on startFlowTyped")
     inner class StartFlowTypedSpec {
 
@@ -167,7 +111,7 @@ class CordaNodeConnectorSpec {
             whenever(flowClassBuilder.buildFlowClass(any())).thenReturn(SingleParameterTestFlow::class.java)
             whenever(rpcOps.startFlowDynamicWithClientId<String>(any(), any(), any())).thenReturn(flowHandle)
 
-            cordaNodeConnector.startFlow(testClientId, singleParameterFlowName, flowParams)
+            cordaNodeConnector.startFlowTyped(testClientId, singleParameterFlowName, flowParams)
 
             verify(flowClassBuilder).buildFlowClass(eq(singleParameterFlowName))
         }

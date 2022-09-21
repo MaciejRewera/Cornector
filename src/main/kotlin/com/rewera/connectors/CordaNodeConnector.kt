@@ -22,19 +22,6 @@ class CordaNodeConnector @Inject constructor(
     fun <T> getFlowOutcomeForClientId(clientId: String): CompletableFuture<T>? =
         cordaRpcOpsFactory.rpcOps.reattachFlowWithClientId<T>(clientId)?.returnValue?.toCompletableFuture()
 
-    // TODO: Would be better if this method ensured the flowClass is for a class inheriting from FlowLogic.
-    fun startFlow(
-        clientId: String,
-        flowName: String,
-        flowParameters: RpcStartFlowRequestParameters
-    ): RpcStartFlowResponse {
-        val flowClass: Class<out FlowLogic<*>> = flowClassBuilder.buildFlowClass(flowName)
-        val flowHandle =
-            cordaRpcOpsFactory.rpcOps.startFlowDynamicWithClientId(clientId, flowClass, flowParameters.parametersInJson)
-
-        return RpcStartFlowResponse(flowHandle.clientId, FlowId(flowHandle.id.uuid))
-    }
-
     fun startFlowTyped(
         clientId: String,
         flowName: String,
