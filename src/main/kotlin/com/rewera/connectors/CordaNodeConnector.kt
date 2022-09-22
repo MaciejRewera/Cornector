@@ -9,7 +9,6 @@ import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.StateMachineRunId
 import net.corda.core.messaging.CordaRPCOps
 import java.util.*
-import java.util.concurrent.CompletableFuture
 
 @Singleton
 class CordaNodeConnector @Inject constructor(
@@ -19,9 +18,6 @@ class CordaNodeConnector @Inject constructor(
 ) {
 
     fun getRegisteredFlows(): List<String> = cordaRpcOps.registeredFlows()
-
-    fun <T> getFlowOutcomeForClientId(clientId: String): CompletableFuture<T>? =
-        cordaRpcOps.reattachFlowWithClientId<T>(clientId)?.returnValue?.toCompletableFuture()
 
     fun startFlowTyped(
         clientId: String,
