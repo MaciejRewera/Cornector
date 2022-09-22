@@ -7,20 +7,21 @@ import com.rewera.models.api.RpcStartFlowRequestParameters
 import com.rewera.models.api.RpcStartFlowResponse
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.StateMachineRunId
+import net.corda.core.messaging.CordaRPCOps
 import java.util.*
 import java.util.concurrent.CompletableFuture
 
 @Singleton
 class CordaNodeConnector @Inject constructor(
-    private val cordaRpcOpsFactory: CordaRpcOpsFactory,
+    private val cordaRpcOps: CordaRPCOps,
     private val parametersExtractor: FlowClassConstructorParametersExtractor,
     private val flowClassBuilder: FlowClassBuilder
 ) {
 
-    fun getRegisteredFlows(): List<String> = cordaRpcOpsFactory.rpcOps.registeredFlows()
+    fun getRegisteredFlows(): List<String> = cordaRpcOps.registeredFlows()
 
     fun <T> getFlowOutcomeForClientId(clientId: String): CompletableFuture<T>? =
-        cordaRpcOpsFactory.rpcOps.reattachFlowWithClientId<T>(clientId)?.returnValue?.toCompletableFuture()
+        cordaRpcOps.reattachFlowWithClientId<T>(clientId)?.returnValue?.toCompletableFuture()
 
     fun startFlowTyped(
         clientId: String,
@@ -31,7 +32,7 @@ class CordaNodeConnector @Inject constructor(
         val flowParametersList = parametersExtractor.extractParameters(flowClass, flowParameters)
 
         val flowHandle =
-            cordaRpcOpsFactory.rpcOps.startFlowDynamicWithClientId(
+            cordaRpcOps.startFlowDynamicWithClientId(
                 clientId,
                 flowClass,
                 *flowParametersList.toTypedArray()
@@ -40,5 +41,5 @@ class CordaNodeConnector @Inject constructor(
         return RpcStartFlowResponse(flowHandle.clientId, FlowId(flowHandle.id.uuid))
     }
 
-    fun killFlow(flowId: UUID): Boolean = cordaRpcOpsFactory.rpcOps.killFlow(StateMachineRunId(flowId))
+    fun killFlow(flowId: UUID): Boolean = cordaRpcOps.killFlow(StateMachineRunId(flowId))
 }

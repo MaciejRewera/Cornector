@@ -18,7 +18,7 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
-class FlowResultsRepositoryIntegrationTest {
+class FlowResultRepositoryIntegrationTest {
 
     private val testDatabaseUri = "mongodb://localhost:27017"
     private val testDatabaseName = "test-cornector"
@@ -28,7 +28,7 @@ class FlowResultsRepositoryIntegrationTest {
         ("mongodb.databaseName" to testDatabaseName)
     )
 
-    private val repository = FlowResultsRepository(config)
+    private val repository = FlowResultRepository(config)
 
     @BeforeEach
     fun setup() {

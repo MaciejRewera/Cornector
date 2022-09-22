@@ -21,7 +21,7 @@ import java.util.*
 
 
 @Singleton
-class FlowResultsRepository @Inject constructor(config: ApplicationConfig) {
+class FlowResultRepository @Inject constructor(config: ApplicationConfig) {
 
     private val connectionString = config.property("mongodb.uri").getString()
     private val databaseName = config.property("mongodb.databaseName").getString()

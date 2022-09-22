@@ -23,18 +23,16 @@ import java.util.*
 
 class CordaNodeConnectorSpec {
 
-    private val cordaRpcOpsFactory = Mockito.mock(CordaRpcOpsFactory::class.java)
-    private val rpcOps = Mockito.mock(CordaRPCOps::class.java)
+    private val cordaRpcOps = Mockito.mock(CordaRPCOps::class.java)
     private val parametersExtractor = Mockito.mock(FlowClassConstructorParametersExtractor::class.java)
     private val flowClassBuilder = Mockito.mock(FlowClassBuilder::class.java)
 
     private val cordaNodeConnector =
-        CordaNodeConnector(cordaRpcOpsFactory, parametersExtractor, flowClassBuilder)
+        CordaNodeConnector(cordaRpcOps, parametersExtractor, flowClassBuilder)
 
     @BeforeEach
     fun setup() {
-        reset(cordaRpcOpsFactory, rpcOps, parametersExtractor, flowClassBuilder)
-        whenever(cordaRpcOpsFactory.rpcOps).thenReturn(rpcOps)
+        reset(cordaRpcOps, parametersExtractor, flowClassBuilder)
     }
 
     @Nested
@@ -43,16 +41,16 @@ class CordaNodeConnectorSpec {
 
         @Test
         fun `should call CordaRPCOps`() {
-            whenever(rpcOps.registeredFlows()).thenReturn(emptyList())
+            whenever(cordaRpcOps.registeredFlows()).thenReturn(emptyList())
 
             cordaNodeConnector.getRegisteredFlows()
 
-            verify(rpcOps).registeredFlows()
+            verify(cordaRpcOps).registeredFlows()
         }
 
         @Test
         fun `should return empty list when CordaRPCOps returns empty list`() {
-            whenever(rpcOps.registeredFlows()).thenReturn(emptyList())
+            whenever(cordaRpcOps.registeredFlows()).thenReturn(emptyList())
 
             cordaNodeConnector.getRegisteredFlows() shouldBe emptyList()
         }
@@ -60,7 +58,7 @@ class CordaNodeConnectorSpec {
         @Test
         fun `should return the value from CordaRPCOps when it returns non-empty list`() {
             val flows = listOf("test.flow.name")
-            whenever(rpcOps.registeredFlows()).thenReturn(flows)
+            whenever(cordaRpcOps.registeredFlows()).thenReturn(flows)
 
             cordaNodeConnector.getRegisteredFlows() shouldBe flows
         }
@@ -74,17 +72,17 @@ class CordaNodeConnectorSpec {
 
         @Test
         suspend fun `should call CordaRPCOps`() {
-            whenever(rpcOps.reattachFlowWithClientId<TestFlowResult>(any()))
+            whenever(cordaRpcOps.reattachFlowWithClientId<TestFlowResult>(any()))
                 .thenReturn(flowHandleWithClientId(testClientId, testReturnValue))
 
             cordaNodeConnector.getFlowOutcomeForClientId<TestFlowResult>(testClientId)!!.await()
 
-            verify(rpcOps).reattachFlowWithClientId<TestFlowResult>(eq(testClientId))
+            verify(cordaRpcOps).reattachFlowWithClientId<TestFlowResult>(eq(testClientId))
         }
 
         @Test
         suspend fun `should return Future with value returned by CordaRPCOps`() {
-            whenever(rpcOps.reattachFlowWithClientId<TestFlowResult>(any()))
+            whenever(cordaRpcOps.reattachFlowWithClientId<TestFlowResult>(any()))
                 .thenReturn(flowHandleWithClientId(testClientId, testReturnValue))
 
             val result = cordaNodeConnector.getFlowOutcomeForClientId<TestFlowResult>(testClientId)!!.await()
@@ -109,7 +107,7 @@ class CordaNodeConnectorSpec {
         fun `should call FlowClassBuilder`() {
             whenever(flowClassBuilder.buildFlowClass(any())).thenReturn(SingleParameterTestFlow::class.java)
             whenever(flowClassBuilder.buildFlowClass(any())).thenReturn(SingleParameterTestFlow::class.java)
-            whenever(rpcOps.startFlowDynamicWithClientId<String>(any(), any(), any())).thenReturn(flowHandle)
+            whenever(cordaRpcOps.startFlowDynamicWithClientId<String>(any(), any(), any())).thenReturn(flowHandle)
 
             cordaNodeConnector.startFlowTyped(testClientId, singleParameterFlowName, flowParams)
 
@@ -119,12 +117,12 @@ class CordaNodeConnectorSpec {
         @Test
         fun `should call CordaRPCOps`() {
             whenever(flowClassBuilder.buildFlowClass(any())).thenReturn(SingleParameterTestFlow::class.java)
-            whenever(rpcOps.startFlowDynamicWithClientId<String>(any(), any(), any())).thenReturn(flowHandle)
+            whenever(cordaRpcOps.startFlowDynamicWithClientId<String>(any(), any(), any())).thenReturn(flowHandle)
             whenever(parametersExtractor.extractParameters<Any>(any(), any())).thenReturn(listOf(someParameterValue))
 
             cordaNodeConnector.startFlowTyped(testClientId, singleParameterFlowName, flowParams)
 
-            verify(rpcOps).startFlowDynamicWithClientId(
+            verify(cordaRpcOps).startFlowDynamicWithClientId(
                 eq(testClientId),
                 eq(SingleParameterTestFlow::class.java),
                 eq(someParameterValue)
@@ -134,7 +132,7 @@ class CordaNodeConnectorSpec {
         @Test
         fun `should return RpcStartFlowResponse with flowId returned from CordaRPCOps`() {
             whenever(flowClassBuilder.buildFlowClass(any())).thenReturn(SingleParameterTestFlow::class.java)
-            whenever(rpcOps.startFlowDynamicWithClientId<String>(any(), any(), any())).thenReturn(flowHandle)
+            whenever(cordaRpcOps.startFlowDynamicWithClientId<String>(any(), any(), any())).thenReturn(flowHandle)
             whenever(parametersExtractor.extractParameters<Any>(any(), any())).thenReturn(listOf(someParameterValue))
 
             val result = cordaNodeConnector.startFlowTyped(testClientId, singleParameterFlowName, flowParams)
@@ -160,7 +158,7 @@ class CordaNodeConnectorSpec {
         @Test
         fun `when provided with flow that has multiple constructor params should call CordaRPCOps with params obtained from parametersExtractor`() {
             whenever(flowClassBuilder.buildFlowClass(any())).thenReturn(MultipleParametersTestFlow::class.java)
-            whenever(rpcOps.startFlowDynamicWithClientId<String>(any(), any(), any())).thenReturn(flowHandle)
+            whenever(cordaRpcOps.startFlowDynamicWithClientId<String>(any(), any(), any())).thenReturn(flowHandle)
             val paramExtractorReturnedValues = listOf("Test value 1", 1234567, "Test value 3")
             whenever(parametersExtractor.extractParameters<Any>(any(), any())).thenReturn(paramExtractorReturnedValues)
 
@@ -171,7 +169,7 @@ class CordaNodeConnectorSpec {
             cordaNodeConnector.startFlowTyped(testClientId, multipleParametersFlowName, multipleFlowParams)
 
             val expectedVararg = paramExtractorReturnedValues.toTypedArray()
-            verify(rpcOps).startFlowDynamicWithClientId(
+            verify(cordaRpcOps).startFlowDynamicWithClientId(
                 testClientId,
                 MultipleParametersTestFlow::class.java,
                 *expectedVararg
@@ -187,16 +185,16 @@ class CordaNodeConnectorSpec {
 
         @Test
         fun `should call CordaRPCOps`() {
-            whenever(rpcOps.killFlow(any())).thenReturn(false)
+            whenever(cordaRpcOps.killFlow(any())).thenReturn(false)
 
             cordaNodeConnector.killFlow(flowIdValue)
 
-            verify(rpcOps).killFlow(eq(StateMachineRunId(flowIdValue)))
+            verify(cordaRpcOps).killFlow(eq(StateMachineRunId(flowIdValue)))
         }
 
         @Test
         fun `should return value from CordaRPCOps`() {
-            whenever(rpcOps.killFlow(any())).thenReturn(true)
+            whenever(cordaRpcOps.killFlow(any())).thenReturn(true)
 
             cordaNodeConnector.killFlow(flowIdValue) shouldBe true
         }
