@@ -82,6 +82,63 @@ class FlowStarterRoutesIntegrationTest : MockedCordaRpcConnectionIntegrationTest
     }
 
     @Nested
+    @DisplayName("/flowoutcome/{flowid} endpoint")
+    inner class FlowOutcomeForFlowIdEndpointSpec {
+
+        private val flowId = randomUuid()
+
+        @Test
+        fun `should return BadRequest when flowId is not in UUID format`() = testApplicationRoutesOnly {
+
+            val response = client.get("/api/v1/flowstarter/flowoutcome/qwerty1243567")
+
+            response.status shouldBe HttpStatusCode.BadRequest
+            response.bodyAsText() shouldBe ""
+        }
+
+        @Test
+        fun `should return NotFound when no clientid provided`() = testApplicationRoutesOnly {
+            val response = client.get("/api/v1/flowstarter/flowoutcome/")
+
+            response.status shouldBe HttpStatusCode.NotFound
+            response.bodyAsText() shouldBe ""
+        }
+
+        @Test
+        fun `should return NotFound when NO flow for clientid found`() = testApplicationRoutesOnly {
+            whenever(flowStarterController.getFlowOutcomeForFlowId(any())).thenAnswer { throw NotFoundException() }
+
+            val response = client.get("/api/v1/flowstarter/flowoutcome/$flowId")
+
+            response.status shouldBe HttpStatusCode.NotFound
+            response.bodyAsText() shouldBe ""
+        }
+
+        @Test
+        fun `should return the value from FlowStarterController when flow for clientid has been found`() =
+            testApplicationRoutesOnly {
+                val testFlowResultJson = Jackson.mapper.writeValueAsString(TestFlowResult("Test value", 1234567))
+                whenever(flowStarterController.getFlowOutcomeForFlowId(any()))
+                    .thenReturn(RpcFlowOutcomeResponse(resultJson = testFlowResultJson, status = FlowStatus.COMPLETED))
+
+                val response = client.get("/api/v1/flowstarter/flowoutcome/$flowId")
+
+                response.status shouldBe HttpStatusCode.OK
+                response.bodyAsText() shouldBe
+                        """{"exceptionDigest":null,"resultJson":"{\"value1\":\"Test value\",\"value2\":1234567}","status":"COMPLETED"}"""
+
+                Jackson.mapper.readValue(
+                    response.bodyAsText(),
+                    RpcFlowOutcomeResponse::class.java
+                ) shouldBe RpcFlowOutcomeResponse(
+                    status = FlowStatus.COMPLETED,
+                    exceptionDigest = null,
+                    resultJson = """{"value1":"Test value","value2":1234567}"""
+                )
+            }
+    }
+
+    @Nested
     @DisplayName("/startflow endpoint")
     inner class StartFlowEndpointSpec {
 

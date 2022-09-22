@@ -12,6 +12,7 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import java.util.*
 
 fun Application.configureRouting(controllersRegistry: ControllersRegistry) {
     install(ContentNegotiation) {
@@ -70,7 +71,18 @@ fun Route.flowStarterRoutes(flowStarterController: FlowStarterController) {
                 ?: throw MissingRequestParameterException("clientid")
         }
 
-        get("/flowoutcome/{flowid}") {}
+        get("/flowoutcome/{flowid}") {
+            val flowIdString = call.parameters["flowid"]
+
+            val flowId = try {
+                UUID.fromString(flowIdString)
+            } catch (exc: IllegalArgumentException) {
+                throw BadRequestException("flowId format is not correct.")
+            }
+
+            flowId?.let { call.respond(flowStarterController.getFlowOutcomeForFlowId(it)) }
+                ?: throw MissingRequestParameterException("flowid")
+        }
 
         get("/getprotocolversion") {}
     }

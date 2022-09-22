@@ -9,6 +9,7 @@ import com.rewera.models.api.RpcStartFlowRequest
 import com.rewera.models.api.RpcStartFlowResponse
 import com.rewera.repositories.FlowResultRepository
 import io.ktor.server.plugins.*
+import java.util.*
 
 @Singleton
 class FlowStarterController @Inject constructor(
@@ -21,6 +22,9 @@ class FlowStarterController @Inject constructor(
 
     fun getFlowOutcomeForClientId(clientId: String): RpcFlowOutcomeResponse =
         flowResultRepository.findByClientId(clientId)?.toRpcFlowOutcomeResponse() ?: throw NotFoundException()
+
+    fun getFlowOutcomeForFlowId(flowId: UUID): RpcFlowOutcomeResponse =
+        flowResultRepository.findByFlowId(flowId)?.toRpcFlowOutcomeResponse() ?: throw NotFoundException()
 
     fun startFlow(rpcStartFlowRequest: RpcStartFlowRequest): RpcStartFlowResponse =
         flowExecutor.startFlow(
