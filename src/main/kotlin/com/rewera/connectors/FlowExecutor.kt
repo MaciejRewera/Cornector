@@ -9,6 +9,7 @@ import com.rewera.models.api.RpcStartFlowResponse
 import com.rewera.repositories.FlowResultRepository
 import net.corda.core.flows.FlowLogic
 import net.corda.core.messaging.CordaRPCOps
+import net.corda.core.messaging.FlowHandle
 import java.util.*
 
 @Singleton
@@ -17,6 +18,20 @@ class FlowExecutor @Inject constructor(
     private val flowResultRepository: FlowResultRepository,
     private val flowClassBuilder: FlowClassBuilder
 ) {
+
+    init {
+        try {
+            reattachToRunningFlows()
+        } catch (e: Throwable) {
+            // TODO: Log exception once logging is set up
+        }
+    }
+
+    private fun reattachToRunningFlows() =
+        flowResultRepository.findByStatus(FlowStatus.RUNNING).forEach { runningFlow ->
+            cordaRpcOps.reattachFlowWithClientId<Any?>(runningFlow.clientId)
+                ?.let { handleResult(runningFlow.clientId, it) }
+        }
 
     fun startFlow(
         clientId: String,
@@ -30,24 +45,19 @@ class FlowExecutor @Inject constructor(
             cordaRpcOps.startFlowDynamicWithClientId(clientId, flowClass, flowParameters.parametersInJson)
 
         val flowId = flowHandle.id.uuid
-        flowHandle.returnValue.toCompletableFuture().thenApply { doOnResult(it, clientId, flowId) }
+        handleResult(clientId, flowHandle)
 
         flowResultRepository.updateFlowId(clientId, flowId)
 
         return RpcStartFlowResponse(flowHandle.clientId, FlowId(flowId))
     }
 
-//    private fun <A> reattachToFlow(clientId: String) =
-//        cordaRpcOpsFactory.rpcOps.reattachFlowWithClientId<A>(clientId).let { flowHandle ->
-//            flowHandle.returnValue.toCompletableFuture().thenApply {
-//                doOnResult(it, clientId, flowHandle.id.uuid)
-//            }
-//        }
+    private fun <A> handleResult(clientId: String, flowHandle: FlowHandle<A>) =
+        flowHandle.returnValue.toCompletableFuture().thenApply { doOnResult(it, clientId, flowHandle.id.uuid) }
 
     private fun <A> doOnResult(flowResult: A, clientId: String, flowId: UUID) {
         flowResultRepository.update(clientId, flowId, FlowStatus.COMPLETED, flowResult)
         cordaRpcOps.removeClientId(clientId)
     }
-
 
 }
