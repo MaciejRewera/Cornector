@@ -30,7 +30,6 @@ class LazyCordaRpcOpsProvider @Inject constructor(
         val gracefulReconnect = GracefulReconnect(onDisconnect = {}, onReconnect = {}, maxAttempts = -1)
         val cordaClient = CordaRPCClient(nodeRpcAddress)
 
-        println("Starting RPC connection to $host:$port with username:[$rpcUserName], password:[$rpcUserPassword]")
         val connection = cordaClient.start(rpcUserName, rpcUserPassword, gracefulReconnect = gracefulReconnect)
 
         applicationLifecycleEvents.subscribe(ApplicationStopped) {
