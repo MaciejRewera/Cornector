@@ -20,8 +20,8 @@ class FlowManagerRoutesIntegrationTest : MockedCordaRpcConnectionIntegrationTest
     inner class KillFlowEndpointSpec {
 
         @Test
-        fun `should return NotFound when no flowid provided`() = testApplicationWithMockedRpcConnection {
-            whenever(rpcOps.killFlow(any())).thenReturn(false)
+        fun `should return NotFound when no flowid provided`() = testApplicationRoutesOnly {
+            whenever(flowManagerController.killFlow(any())).thenReturn(false)
 
             val response =
                 client.post("/api/v1/flowmanagerrpcops/killflow") { contentType(ContentType.Application.Json) }
@@ -31,8 +31,8 @@ class FlowManagerRoutesIntegrationTest : MockedCordaRpcConnectionIntegrationTest
         }
 
         @Test
-        fun `should return Boolean value returned from CordaRPCOps`() = testApplicationWithMockedRpcConnection {
-            whenever(rpcOps.killFlow(any())).thenReturn(true)
+        fun `should return Boolean value returned from CordaRPCOps`() = testApplicationRoutesOnly {
+            whenever(flowManagerController.killFlow(any())).thenReturn(true)
             val flowId = UUID.randomUUID().toString()
 
             val response =

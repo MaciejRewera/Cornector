@@ -1,14 +1,17 @@
 package com.rewera.controllers
 
 import com.rewera.connectors.CordaNodeConnector
+import com.rewera.connectors.FlowExecutor
+import com.rewera.models.FlowResult
 import com.rewera.models.api.*
+import com.rewera.repositories.FlowResultRepository
 import com.rewera.testdata.TestData.TestFlowResult
+import com.rewera.testdata.TestData.randomUuid
+import com.rewera.testdata.TestData.randomUuidString
 import com.rewera.testdata.TestData.testClientId
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.ktor.server.plugins.*
-import net.corda.core.internal.concurrent.doneFuture
-import net.corda.core.internal.concurrent.openFuture
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -22,12 +25,14 @@ import java.util.concurrent.CompletionException
 class FlowStarterControllerSpec {
 
     private val cordaNodeConnector = mock(CordaNodeConnector::class.java)
+    private val flowExecutor = mock(FlowExecutor::class.java)
+    private val flowResultRepository = mock(FlowResultRepository::class.java)
 
-    private val flowStarterController = FlowStarterController(cordaNodeConnector)
+    private val flowStarterController = FlowStarterController(cordaNodeConnector, flowExecutor, flowResultRepository)
 
     @BeforeEach
     fun setup() {
-        reset(cordaNodeConnector)
+        reset(cordaNodeConnector, flowExecutor, flowResultRepository)
     }
 
     @Nested
@@ -56,29 +61,28 @@ class FlowStarterControllerSpec {
     @DisplayName("FlowStarterController on getFlowOutcomeForClientId")
     inner class GetFlowOutcomeForClientIdSpec {
 
-        private val testReturnValue = TestFlowResult("Test value", 1234567)
-
         @Test
-        fun `should call CordaNodeConnector`() {
-            whenever(cordaNodeConnector.getFlowOutcomeForClientId<TestFlowResult>(any()))
-                .thenReturn(doneFuture(testReturnValue).toCompletableFuture())
+        fun `should call FlowResultRepository`() {
+            whenever(flowResultRepository.findByClientId(any())).thenReturn(FlowResult<Any>(testClientId))
 
             flowStarterController.getFlowOutcomeForClientId(testClientId)
 
-            verify(cordaNodeConnector).getFlowOutcomeForClientId<TestFlowResult>(eq(testClientId))
+            verify(flowResultRepository).findByClientId(eq(testClientId))
         }
 
         @Test
-        fun `should throw NotFoundException when CordaNodeConnector returns null`() {
-            whenever(cordaNodeConnector.getFlowOutcomeForClientId<TestFlowResult>(any())).thenReturn(null)
+        fun `should throw NotFoundException when FlowResultRepository returns null`() {
+            whenever(flowResultRepository.findByClientId(any())).thenReturn(null)
 
-            shouldThrow<NotFoundException> { flowStarterController.getFlowOutcomeForClientId(testClientId) }
+            val exc = shouldThrow<NotFoundException> { flowStarterController.getFlowOutcomeForClientId(testClientId) }
+            exc.message shouldBe "Resource not found"
         }
 
         @Test
-        fun `should return RpcFlowOutcomeResponse with status RUNNING when CordaNodeConnector returns unfinished future`() {
-            val unfinishedFuture = openFuture<TestFlowResult>().toCompletableFuture()
-            whenever(cordaNodeConnector.getFlowOutcomeForClientId<TestFlowResult>(any())).thenReturn(unfinishedFuture)
+        fun `should return RpcFlowOutcomeResponse with status RUNNING when FlowResultRepository returns FlowResult with status RUNNING`() {
+            whenever(flowResultRepository.findByClientId(any())).thenReturn(
+                FlowResult<Any>(testClientId, flowId = randomUuidString(), status = FlowStatus.RUNNING)
+            )
 
             val result = flowStarterController.getFlowOutcomeForClientId(testClientId)
 
@@ -92,20 +96,25 @@ class FlowStarterControllerSpec {
         }
 
         @Test
-        fun `should return RpcFlowOutcomeResponse with status FAILED when CordaNodeConnector returns exceptionally finished future`() {
-            val failedFuture = openFuture<TestFlowResult>().toCompletableFuture()
-            val exceptionMessage = "Something went wrong in the flow"
-            failedFuture.completeExceptionally(RuntimeException(exceptionMessage))
-            whenever(cordaNodeConnector.getFlowOutcomeForClientId<TestFlowResult>(any())).thenReturn(failedFuture)
+        fun `should return RpcFlowOutcomeResponse with status FAILED when FlowResultRepository returns FlowResult with status FAILED`() {
+            val exceptionDigest = ExceptionDigest(
+                exceptionType = CompletionException::class.java.name,
+                message = "Something went wrong in the flow"
+            )
+            whenever(flowResultRepository.findByClientId(any())).thenReturn(
+                FlowResult<Any>(
+                    testClientId,
+                    flowId = randomUuidString(),
+                    status = FlowStatus.FAILED,
+                    exceptionDigest = exceptionDigest
+                )
+            )
 
             val result = flowStarterController.getFlowOutcomeForClientId(testClientId)
 
             val expectedResult = RpcFlowOutcomeResponse(
                 status = FlowStatus.FAILED,
-                exceptionDigest = ExceptionDigest(
-                    CompletionException::class.java.name,
-                    "${RuntimeException::class.java.name}: $exceptionMessage"
-                ),
+                exceptionDigest = exceptionDigest,
                 resultJson = null
             )
 
@@ -113,11 +122,107 @@ class FlowStarterControllerSpec {
         }
 
         @Test
-        fun `should return RpcFlowOutcomeResponse with status COMPLETED when CordaNodeConnector returns finished future`() {
-            whenever(cordaNodeConnector.getFlowOutcomeForClientId<TestFlowResult>(any()))
-                .thenReturn(doneFuture(testReturnValue).toCompletableFuture())
+        fun `should return RpcFlowOutcomeResponse with status COMPLETED when FlowResultRepository returns FlowResult with status COMPLETED`() {
+            whenever(flowResultRepository.findByClientId(any())).thenReturn(
+                FlowResult(
+                    testClientId,
+                    flowId = randomUuidString(),
+                    result = TestFlowResult("Test value", 1234567),
+                    status = FlowStatus.COMPLETED
+                )
+            )
 
             val result = flowStarterController.getFlowOutcomeForClientId(testClientId)
+
+            val expectedResult = RpcFlowOutcomeResponse(
+                status = FlowStatus.COMPLETED,
+                exceptionDigest = null,
+                resultJson = """{"value1":"Test value","value2":1234567}"""
+            )
+
+            result shouldBe expectedResult
+        }
+    }
+
+
+    @Nested
+    @DisplayName("FlowStarterController on getFlowOutcomeForFlowId")
+    inner class GetFlowOutcomeForFlowIdSpec {
+
+        private val flowId = randomUuid()
+
+        @Test
+        fun `should call FlowResultRepository`() {
+            whenever(flowResultRepository.findByFlowId(any())).thenReturn(FlowResult<Any>(testClientId))
+
+            flowStarterController.getFlowOutcomeForFlowId(flowId)
+
+            verify(flowResultRepository).findByFlowId(eq(flowId))
+        }
+
+        @Test
+        fun `should throw NotFoundException when FlowResultRepository returns null`() {
+            whenever(flowResultRepository.findByFlowId(any())).thenReturn(null)
+
+            val exc = shouldThrow<NotFoundException> { flowStarterController.getFlowOutcomeForFlowId(flowId) }
+            exc.message shouldBe "Resource not found"
+        }
+
+        @Test
+        fun `should return RpcFlowOutcomeResponse with status RUNNING when FlowResultRepository returns FlowResult with status RUNNING`() {
+            whenever(flowResultRepository.findByFlowId(any())).thenReturn(
+                FlowResult<Any>(testClientId, flowId = randomUuidString(), status = FlowStatus.RUNNING)
+            )
+
+            val result = flowStarterController.getFlowOutcomeForFlowId(flowId)
+
+            val expectedResult = RpcFlowOutcomeResponse(
+                status = FlowStatus.RUNNING,
+                exceptionDigest = null,
+                resultJson = null
+            )
+
+            result shouldBe expectedResult
+        }
+
+        @Test
+        fun `should return RpcFlowOutcomeResponse with status FAILED when FlowResultRepository returns FlowResult with status FAILED`() {
+            val exceptionDigest = ExceptionDigest(
+                exceptionType = CompletionException::class.java.name,
+                message = "Something went wrong in the flow"
+            )
+            whenever(flowResultRepository.findByFlowId(any())).thenReturn(
+                FlowResult<Any>(
+                    testClientId,
+                    flowId = randomUuidString(),
+                    status = FlowStatus.FAILED,
+                    exceptionDigest = exceptionDigest
+                )
+            )
+
+            val result = flowStarterController.getFlowOutcomeForFlowId(flowId)
+
+            val expectedResult = RpcFlowOutcomeResponse(
+                status = FlowStatus.FAILED,
+                exceptionDigest = exceptionDigest,
+                resultJson = null
+            )
+
+            result shouldBe expectedResult
+        }
+
+        @Test
+        fun `should return RpcFlowOutcomeResponse with status COMPLETED when FlowResultRepository returns FlowResult with status COMPLETED`() {
+            whenever(flowResultRepository.findByFlowId(any())).thenReturn(
+                FlowResult(
+                    testClientId,
+                    flowId = randomUuidString(),
+                    result = TestFlowResult("Test value", 1234567),
+                    status = FlowStatus.COMPLETED
+                )
+            )
+
+            val result = flowStarterController.getFlowOutcomeForFlowId(flowId)
 
             val expectedResult = RpcFlowOutcomeResponse(
                 status = FlowStatus.COMPLETED,
@@ -134,23 +239,23 @@ class FlowStarterControllerSpec {
     inner class StartFlowSpec {
 
         private val flowName = "test.flow.name"
-        private val jsonParams =  RpcStartFlowRequestParameters("There should be parameters in JSON")
+        private val jsonParams = RpcStartFlowRequestParameters("There should be parameters in JSON")
 
         @Test
-        fun `should call CordaNodeConnector`() {
-            whenever(cordaNodeConnector.startFlow(any(), any(), any()))
+        fun `should call FlowExecutor`() {
+            whenever(flowExecutor.startFlow(any(), any(), any()))
                 .thenReturn(RpcStartFlowResponse("This is test startFlow response", FlowId(UUID.randomUUID())))
             val rpcStartFlowRequest = RpcStartFlowRequest(testClientId, flowName, jsonParams)
 
             flowStarterController.startFlow(rpcStartFlowRequest)
 
-            verify(cordaNodeConnector).startFlow(eq(testClientId), eq(flowName), eq(jsonParams))
+            verify(flowExecutor).startFlow(eq(testClientId), eq(flowName), eq(jsonParams))
         }
 
         @Test
-        fun `should return value returned by CordaNodeConnector`() {
+        fun `should return value returned by FlowExecutor`() {
             val response = RpcStartFlowResponse("This is test startFlow response", FlowId(UUID.randomUUID()))
-            whenever(cordaNodeConnector.startFlow(any(), any(), any())).thenReturn(response)
+            whenever(flowExecutor.startFlow(any(), any(), any())).thenReturn(response)
             val rpcStartFlowRequest = RpcStartFlowRequest(testClientId, flowName, jsonParams)
 
             flowStarterController.startFlow(rpcStartFlowRequest) shouldBe response

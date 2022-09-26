@@ -16,14 +16,28 @@ object TestData {
 
     data class TestFlowResult(val value1: String, val value2: Int)
 
-    fun flowHandleWithClientId(clientId: String, returnValue: TestFlowResult) = object : FlowHandleWithClientId<TestFlowResult> {
-        override val clientId: String = clientId
-        override val returnValue: CordaFuture<TestFlowResult> = doneFuture(returnValue)
-        override val id: StateMachineRunId = StateMachineRunId(UUID.randomUUID())
-        override fun close() {}
+    fun flowHandleWithClientId(clientId: String, returnValue: TestFlowResult) =
+        object : FlowHandleWithClientId<TestFlowResult> {
+            override val clientId: String = clientId
+            override val returnValue: CordaFuture<TestFlowResult> = doneFuture(returnValue)
+            override val id: StateMachineRunId = StateMachineRunId(randomUuid())
+            override fun close() {}
+        }
+
+    class ParameterlessTestFlow : FlowLogic<String>() {
+        override fun call(): String = "ParameterlessTestFlow result should be here."
     }
 
     class SingleParameterTestFlow(someParameter: String) : FlowLogic<String>() {
         override fun call(): String = "SingleParameterTestFlow result should be here."
     }
+
+    class MultipleParametersTestFlow(
+        firstParameter: String,
+        secondParameter: Int,
+        thirdParameter: String
+    ) : FlowLogic<String>() {
+        override fun call(): String = "MultipleParametersTestFlow result should be here."
+    }
+
 }

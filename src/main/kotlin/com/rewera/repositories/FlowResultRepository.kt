@@ -21,7 +21,7 @@ import java.util.*
 
 
 @Singleton
-class FlowResultsRepository @Inject constructor(config: ApplicationConfig) {
+class FlowResultRepository @Inject constructor(config: ApplicationConfig) {
 
     private val connectionString = config.property("mongodb.uri").getString()
     private val databaseName = config.property("mongodb.databaseName").getString()
@@ -66,8 +66,17 @@ class FlowResultsRepository @Inject constructor(config: ApplicationConfig) {
     fun updateFlowId(clientIdToFind: String, flowId: UUID): UpdateResult =
         collection.updateOne(FlowResult<*>::clientId eq clientIdToFind, FlowResult<*>::flowId setTo flowId.toString())
 
-    fun <A> update(clientIdToFind: String, status: FlowStatus, result: A): UpdateResult = collection.updateOne(
-        FlowResult<*>::clientId eq clientIdToFind,
-        set(FlowResult<A>::status setTo status, FlowResult<A>::result setTo result)
-    )
+    fun <A> update(clientIdToFind: String, flowId: UUID, status: FlowStatus, result: A): UpdateResult =
+        collection.updateOne(
+            filter = and(
+                FlowResult<A>::clientId eq clientIdToFind,
+                FlowResult<A>::result eq null,
+                FlowResult<A>::status eq FlowStatus.RUNNING
+            ),
+            updates = arrayOf(
+                FlowResult<*>::flowId setTo flowId.toString(),
+                FlowResult<A>::status setTo status,
+                FlowResult<A>::result setTo result
+            )
+        )
 }
