@@ -10,7 +10,6 @@ import com.rewera.repositories.FlowResultRepository
 import net.corda.core.flows.FlowLogic
 import net.corda.core.messaging.CordaRPCOps
 import net.corda.core.messaging.FlowHandle
-import java.util.*
 
 @Singleton
 class FlowExecutor @Inject constructor(
@@ -44,20 +43,18 @@ class FlowExecutor @Inject constructor(
         val flowHandle =
             cordaRpcOps.startFlowDynamicWithClientId(clientId, flowClass, flowParameters.parametersInJson)
 
-        val flowId = flowHandle.id.uuid
         handleResult(clientId, flowHandle)
 
+        val flowId = flowHandle.id.uuid
         flowResultRepository.updateFlowId(clientId, flowId)
 
         return RpcStartFlowResponse(flowHandle.clientId, FlowId(flowId))
     }
 
     private fun <A> handleResult(clientId: String, flowHandle: FlowHandle<A>) =
-        flowHandle.returnValue.toCompletableFuture().thenApply { doOnResult(it, clientId, flowHandle.id.uuid) }
-
-    private fun <A> doOnResult(flowResult: A, clientId: String, flowId: UUID) {
-        flowResultRepository.update(clientId, flowId, FlowStatus.COMPLETED, flowResult)
-        cordaRpcOps.removeClientId(clientId)
-    }
+        flowHandle.returnValue.toCompletableFuture().thenApply {
+            flowResultRepository.update(clientId, flowHandle.id.uuid, FlowStatus.COMPLETED, it)
+            cordaRpcOps.removeClientId(clientId)
+        }
 
 }
